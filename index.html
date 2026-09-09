@@ -59,15 +59,15 @@
   /* ---------- MENU ---------- */
   #screen-menu{
     height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:46px;
+    gap:34px; padding:28px 34px;
   }
-  .logos-row{ display:flex; align-items:center; justify-content:center; gap:36px; margin-bottom:20px; }
+  .logos-row{ display:flex; align-items:center; justify-content:center; gap:54px; margin-bottom:4px; }
   .logo-box{
     background:#f4f4f0; border-radius:8px; padding:10px 16px;
     display:flex; align-items:center; justify-content:center;
     box-shadow:0 6px 16px rgba(0,0,0,0.4);
   }
-  .logo-box img{ display:block; height:56px; width:auto; }
+  .logo-box img{ display:block; height:62px; width:auto; }
   .logo-box.placeholder{
     height:56px; width:150px; background:transparent;
     border:2px dashed var(--border); color:var(--text-dim);
@@ -81,19 +81,19 @@
   }
   .title-block p{ font-size:22px; color:var(--text-dim); margin:0; }
 
-  .cards{ display:flex; gap:28px; flex-wrap:wrap; justify-content:center; max-width:1040px; }
+  .cards{ display:grid; grid-template-columns:repeat(4, minmax(190px, 1fr)); gap:34px; width:min(1080px, 92vw); align-items:stretch; }
   .card{
-    width:220px; height:250px;
+    width:auto; height:245px;
     background:var(--bg-panel);
     border:3px solid var(--border);
     border-radius:6px;
     display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-    padding:22px 16px;
+    padding:24px 18px 20px;
     position:relative;
     transition:transform .12s, border-color .12s, box-shadow .12s;
   }
-  .card .icon{ width:64px; height:64px; margin-bottom:18px; }
-  .card .name{ font-size:15px; text-align:center; line-height:1.5; color:var(--text); }
+  .card .icon{ width:68px; height:68px; margin-bottom:24px; flex:0 0 auto; }
+  .card .name{ font-size:13px; text-align:center; line-height:1.9; color:var(--text); min-height:52px; display:flex; align-items:center; justify-content:center; }
   .card .code{ position:absolute; top:10px; left:12px; font-size:11px; color:var(--text-dim); }
   .card.selected{
     transform:translateY(-10px) scale(1.05);
@@ -106,8 +106,25 @@
   .card[data-mencion="computadores"]{ --sel-color:var(--c-computadores); }
   .card[data-mencion="control"]{ --sel-color:var(--c-control); }
 
-  .hint{ font-size:20px; color:var(--text-dim); text-align:center; }
+  .hint{ font-size:20px; margin:0; padding-top:2px; color:var(--text-dim); text-align:center; }
   .hint b{ color:#fff; }
+
+  @media (max-width:900px){
+    #screen-menu{gap:24px;padding:18px;}
+    .cards{grid-template-columns:repeat(2,minmax(180px,1fr));gap:20px;}
+    .card{height:220px;}
+    .card .icon{width:58px;height:58px;margin-bottom:16px;}
+  }
+  @media (max-height:760px){
+    #screen-menu{gap:18px;padding:12px;}
+    .logos-row{margin-bottom:0;}
+    .logo-box img{height:48px;}
+    .title-block h1{font-size:24px;margin-bottom:10px;}
+    .title-block p{font-size:19px;}
+    .card{height:205px;padding:16px;}
+    .card .icon{width:52px;height:52px;margin-bottom:12px;}
+    .hint{font-size:17px;}
+  }
 
   /* ---------- GAME SCREEN ---------- */
   #screen-game{ display:none; height:100vh; flex-direction:column; align-items:center; justify-content:center; gap:14px; }
@@ -158,12 +175,12 @@
     <div class="card" data-mencion="telecom">
       <span class="code pixel">02</span>
       <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M2 12c3-6 7-6 10 0s7 6 10 0" stroke="#00e5ff" stroke-width="2.4" fill="none"/></svg>
-      <div class="name pixel">TELECOMUNI-<br>CACIONES</div>
+      <div class="name pixel">TELECOMUNICACIONES</div>
     </div>
     <div class="card" data-mencion="computadores">
       <span class="code pixel">03</span>
       <svg class="icon" viewBox="0 0 24 24" fill="none"><rect x="6" y="6" width="12" height="12" rx="1.5" stroke="#5eff8f" stroke-width="2"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" stroke="#5eff8f" stroke-width="1.6"/></svg>
-      <div class="name pixel">COMPUTA-<br>DORES</div>
+      <div class="name pixel">COMPUTADORES</div>
     </div>
     <div class="card" data-mencion="control">
       <span class="code pixel">04</span>
@@ -284,17 +301,26 @@ function pulseCircle(x,y,r,color){ctx.save();ctx.shadowColor=color;ctx.shadowBlu
    D-pad = cursor. A = rotate. B = nuevo circuito.
    ============================================================ */
 const SHAPES={straight:[0,2],corner:[0,1],tee:[0,1,3],cross:[0,1,2,3]};
+const PIECE_TYPES=['straight','corner','tee','cross'];
+const PIECE_LABELS={straight:'RECTA',corner:'ESQUINA',tee:'T',cross:'CRUCE'};
+/* Cada nivel contiene una ruta garantizada. La solución se calcula a partir
+   de la geometría de la ruta, evitando tableros imposibles. */
 const POWER_TEMPLATES=[
- {source:{c:0,r:1},target:{c:5,r:2},tiles:[
-   {c:1,r:1,s:'straight',sol:1},{c:2,r:1,s:'corner',sol:1},{c:2,r:2,s:'straight',sol:1},{c:3,r:2,s:'corner',sol:2},{c:3,r:3,s:'straight',sol:0},{c:4,r:3,s:'corner',sol:0},{c:4,r:2,s:'straight',sol:1}]},
- {source:{c:0,r:2},target:{c:5,r:1},tiles:[
-   {c:1,r:2,s:'straight',sol:1},{c:2,r:2,s:'corner',sol:1},{c:2,r:1,s:'straight',sol:1},{c:3,r:1,s:'corner',sol:2},{c:3,r:2,s:'straight',sol:1},{c:4,r:2,s:'corner',sol:3},{c:4,r:1,s:'straight',sol:1}]},
+ {source:{c:0,r:1},target:{c:5,r:1},tiles:[
+   {c:1,r:1,s:'straight',sol:1},{c:2,r:1,s:'straight',sol:1},{c:3,r:1,s:'straight',sol:1},{c:4,r:1,s:'straight',sol:1}]},
  {source:{c:0,r:0},target:{c:5,r:3},tiles:[
-   {c:1,r:0,s:'corner',sol:1},{c:1,r:1,s:'straight',sol:0},{c:1,r:2,s:'corner',sol:0},{c:2,r:2,s:'straight',sol:1},{c:3,r:2,s:'corner',sol:1},{c:3,r:3,s:'straight',sol:1},{c:4,r:3,s:'straight',sol:1}]}
+   {c:1,r:0,s:'corner',sol:2},{c:1,r:1,s:'straight',sol:0},{c:1,r:2,s:'corner',sol:0},
+   {c:2,r:2,s:'straight',sol:1},{c:3,r:2,s:'corner',sol:2},{c:3,r:3,s:'corner',sol:0},{c:4,r:3,s:'straight',sol:1}]},
+ {source:{c:0,r:3},target:{c:5,r:0},tiles:[
+   {c:1,r:3,s:'corner',sol:3},{c:1,r:2,s:'straight',sol:0},{c:1,r:1,s:'corner',sol:1},
+   {c:2,r:1,s:'straight',sol:1},{c:3,r:1,s:'tee',sol:0},{c:3,r:0,s:'corner',sol:1},{c:4,r:0,s:'straight',sol:1}]},
+ {source:{c:0,r:0},target:{c:5,r:3},tiles:[
+   {c:1,r:0,s:'corner',sol:2},{c:1,r:1,s:'straight',sol:0},{c:1,r:2,s:'corner',sol:0},
+   {c:2,r:2,s:'straight',sol:1},{c:3,r:2,s:'tee',sol:2},{c:3,r:3,s:'corner',sol:0},{c:4,r:3,s:'straight',sol:1}]}
 ];
 const potencias={
- controlsHint:'D-PAD <b>mover cursor</b> · A <b>rotar pieza</b> · B <b>nuevo circuito</b> · START <b>menú</b>',
- cols:6,rows:4,source:null,target:null,tiles:[],cursor:{c:0,r:0},successTime:0,
+ controlsHint:'D-PAD <b>mover</b> · A <b>rotar</b> · B <b>cambiar pieza</b> · START <b>menú</b>',
+ cols:6,rows:4,source:null,target:null,tiles:[],cursor:{c:0,r:0},successTime:0,level:1,
  reset(){const t=POWER_TEMPLATES[Math.floor(Math.random()*POWER_TEMPLATES.length)];this.source=t.source;this.target=t.target;this.tiles=t.tiles.map(v=>({...v,rot:Math.floor(Math.random()*4)}));this.cursor={c:0,r:0};this.successTime=0;},
  info(c,r){if(c===this.source.c&&r===this.source.r)return{type:'source'};if(c===this.target.c&&r===this.target.r)return{type:'target'};const t=this.tiles.find(v=>v.c===c&&v.r===r);return t?{type:'tile',tile:t}:{type:'empty'};},
  conns(info){if(info.type==='source')return[1];if(info.type==='target')return[3];if(info.type==='empty')return[];return SHAPES[info.tile.s].map(d=>(d+info.tile.rot)%4);},
@@ -306,25 +332,36 @@ const potencias={
    if(input.pressed.down)this.cursor.r=Math.min(this.rows-1,this.cursor.r+1);
    const t=this.tiles.find(v=>v.c===this.cursor.c&&v.r===this.cursor.r);
    if(input.pressed.a&&t)t.rot=(t.rot+1)%4;
-   if(input.pressed.b)this.reset();
+   if(input.pressed.b&&t){const i=PIECE_TYPES.indexOf(t.s);t.s=PIECE_TYPES[(i+1)%PIECE_TYPES.length];t.rot=0;}
    const reach=this.reachable();
    this.successTime=reach.has(this.target.c+','+this.target.r)?this.successTime+1/60:0;
-   if(this.successTime>1.1)this.reset();
+   if(this.successTime>1.0)this.reset();
  },
  draw(){
-   drawHeader('MENCIÓN 01 · POTENCIAS Y CIRCUITOS','#ffcc00','LABORATORIO DE ENERGÍA · conecta la fuente con la carga');
-   const cell=104, ox=168, oy=122; const reach=this.reachable();
-   panel(22,110,122,390,'#6f5c00');text('MISIÓN',35,145,18,'#ffcc00','Press Start 2P');text('Cierra',35,185,22);text('el camino',35,210,22);text('de energía',35,235,22);text('sin dejar',35,275,22);text('cortes.',35,300,22);
-   panel(810,110,168,390,'#6f5c00');text('CONTROLES',825,145,16,'#ffcc00','Press Start 2P');text('D-PAD',825,185,22,'#fff');text('mover',825,208,20);text('A',825,250,22,'#ffcc00','Press Start 2P');text('rotar',860,250,20);text('B',825,292,22,'#ffcc00','Press Start 2P');text('reiniciar',860,292,20);
+   drawHeader('MENCIÓN 01 · POTENCIAS Y CIRCUITOS','#ffcc00','LABORATORIO DE ENERGÍA · arma una ruta continua desde la fuente hasta la carga');
+   const cell=86,ox=208,oy=145,reach=this.reachable();
+   panel(24,112,160,405,'#6f5c00');
+   text('DESAFÍO',42,145,17,'#ffcc00','Press Start 2P');
+   text('LLEVA LA',42,185,22);text('ENERGÍA',42,213,22);text('HASTA LA',42,241,22);text('CARGA',42,269,22);
+   text('A',42,320,20,'#ffcc00','Press Start 2P');text('ROTAR',78,320,19);
+   text('B',42,355,20,'#ffcc00','Press Start 2P');text('TIPO',78,355,19);
+   text('PIEZA',42,396,15,'#9fb7a5','Press Start 2P');
+   const cur=this.tiles.find(v=>v.c===this.cursor.c&&v.r===this.cursor.r);text(cur?PIECE_LABELS[cur.s]:'VACÍO',42,424,18,'#fff','Press Start 2P');
+   panel(730,112,246,405,'#6f5c00');
+   text('OBJETIVO',752,145,17,'#ffcc00','Press Start 2P');
+   text('FUENTE  →  CARGA',752,180,19,'#fff','Press Start 2P');
+   text('TIPOS DISPONIBLES',752,228,15,'#9fb7a5','Press Start 2P');
+   ['RECTA','ESQUINA','T','CRUCE'].forEach((v,i)=>text(v,752,260+i*34,19,i===PIECE_TYPES.indexOf(cur?.s)?'#ffcc00':'#b7c7bd','VT323'));
    for(let r=0;r<this.rows;r++)for(let c=0;c<this.cols;c++){
      const x=ox+c*cell,y=oy+r*cell,cx=x+cell/2,cy=y+cell/2,info=this.info(c,r),lit=reach.has(c+','+r);
-     ctx.fillStyle='rgba(8,25,30,.7)';ctx.fillRect(x+4,y+4,cell-8,cell-8);ctx.strokeStyle='#20404a';ctx.strokeRect(x+4,y+4,cell-8,cell-8);
-     const con=this.conns(info);if(info.type!=='empty'){const col=lit?'#62ff7d':'#476b5b';ctx.strokeStyle=col;ctx.lineWidth=lit?9:6;ctx.lineCap='round';for(const d of con){const ex=d===1?x+cell-5:d===3?x+5:cx,ey=d===0?y+5:d===2?y+cell-5:cy;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ex,ey);ctx.stroke();}ctx.fillStyle=col;ctx.beginPath();ctx.arc(cx,cy,7,0,Math.PI*2);ctx.fill();}
-     if(info.type==='source'){ctx.fillStyle='#62ff7d';ctx.fillRect(cx-24,cy-24,48,48);text('+',cx,cy+9,26,'#07140f','Press Start 2P','center');}
-     if(info.type==='target'){ctx.strokeStyle=lit?'#62ff7d':'#ff6b3d';ctx.lineWidth=5;ctx.strokeRect(cx-27,cy-27,54,54);text('LOAD',cx,cy+7,13,lit?'#62ff7d':'#ff6b3d','Press Start 2P','center');}
-     if(c===this.cursor.c&&r===this.cursor.r){ctx.strokeStyle='#ffcc00';ctx.lineWidth=5;ctx.shadowColor='#ffcc00';ctx.shadowBlur=15;ctx.strokeRect(x+1,y+1,cell-2,cell-2);ctx.shadowBlur=0;}
+     ctx.fillStyle='rgba(8,25,30,.78)';ctx.fillRect(x+3,y+3,cell-6,cell-6);ctx.strokeStyle='#20404a';ctx.strokeRect(x+3,y+3,cell-6,cell-6);
+     const con=this.conns(info);if(info.type!=='empty'){const col=lit?'#62ff7d':'#476b5b';ctx.strokeStyle=col;ctx.lineWidth=lit?8:6;ctx.lineCap='round';for(const d of con){const ex=d===1?x+cell-5:d===3?x+5:cx,ey=d===0?y+5:d===2?y+cell-5:cy;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ex,ey);ctx.stroke();}ctx.fillStyle=col;ctx.beginPath();ctx.arc(cx,cy,6,0,Math.PI*2);ctx.fill();}
+     if(info.type==='source'){ctx.fillStyle='#62ff7d';ctx.fillRect(cx-21,cy-21,42,42);text('⚡',cx,cy+8,24,'#07140f','VT323','center');}
+     if(info.type==='target'){ctx.strokeStyle=lit?'#62ff7d':'#ff6b3d';ctx.lineWidth=5;ctx.strokeRect(cx-23,cy-23,46,46);text('LOAD',cx,cy+5,10,lit?'#62ff7d':'#ff6b3d','Press Start 2P','center');}
+     if(c===this.cursor.c&&r===this.cursor.r){ctx.strokeStyle='#ffcc00';ctx.lineWidth=4;ctx.shadowColor='#ffcc00';ctx.shadowBlur=13;ctx.strokeRect(x+1,y+1,cell-2,cell-2);ctx.shadowBlur=0;}
    }
-   const solved=reach.has(this.target.c+','+this.target.r);text('FUENTE',ox,560,16,'#62ff7d','Press Start 2P');text('CARGA',ox+cell*5,560,16,solved?'#62ff7d':'#ff6b3d','Press Start 2P');
+   text('D-PAD  ·  mueve el cursor',ox,525,17,'#9fb7a5','VT323');
+   text('A  ·  gira     B  ·  cambia tipo',ox+245,525,17,'#fff','VT323');
    if(this.successTime>.05)flashSuccess('¡CIRCUITO CERRADO!','#62ff7d');
  }
 };
@@ -365,40 +402,42 @@ const telecom={
    D-pad = selecciona nodo. A = conmuta entrada o cambia compuerta.
    ============================================================ */
 const computadores={
- controlsHint:'D-PAD <b>seleccionar nodo</b> · A <b>conmutar</b> · B <b>nuevo desafío</b> · START <b>menú</b>',
+ controlsHint:'D-PAD <b>seleccionar</b> · A <b>cambiar</b> · B <b>nuevo desafío</b> · START <b>menú</b>',
  gateNames:['AND','OR','NOT'],gateIndex:0,a:0,b:0,targetA:1,targetB:1,targetGate:'AND',successTime:0,sel:0,
- reset(){this.gateIndex=Math.floor(Math.random()*2);this.a=Math.random()>.5?1:0;this.b=Math.random()>.5?1:0;this.targetA=Math.random()>.5?1:0;this.targetB=Math.random()>.5?1:0;this.targetGate=this.gateNames[this.gateIndex];this.successTime=0;this.sel=0;},
- output(){if(this.targetGate==='AND')return this.a&this.b;if(this.targetGate==='OR')return this.a|this.b;return this.a?0:1;},
- targetOut(){if(this.targetGate==='AND')return this.targetA&this.targetB;if(this.targetGate==='OR')return this.targetA|this.targetB;return this.targetA?0:1;},
+ reset(){this.gateIndex=Math.floor(Math.random()*3);this.a=Math.random()>.5?1:0;this.b=Math.random()>.5?1:0;this.targetA=Math.random()>.5?1:0;this.targetB=Math.random()>.5?1:0;this.targetGate=this.gateNames[this.gateIndex];this.successTime=0;this.sel=0;},
+ output(){const g=this.gateNames[this.gateIndex];return g==='AND'?(this.a&this.b):g==='OR'?(this.a|this.b):(this.a?0:1);},
+ targetOut(){const g=this.targetGate;return g==='AND'?(this.targetA&this.targetB):g==='OR'?(this.targetA|this.targetB):(this.targetA?0:1);},
  update(input){
    if(input.pressed.left)this.sel=(this.sel+2)%3;if(input.pressed.right)this.sel=(this.sel+1)%3;
    if(input.pressed.up)this.sel=(this.sel+2)%3;if(input.pressed.down)this.sel=(this.sel+1)%3;
    if(input.pressed.a){if(this.sel===0)this.a^=1;else if(this.sel===1)this.b^=1;else this.gateIndex=(this.gateIndex+1)%3;}
    if(input.pressed.b)this.reset();
-   const gate=this.gateNames[this.gateIndex];let out=gate==='AND'?(this.a&this.b):gate==='OR'?(this.a|this.b):(this.a?0:1);
-   const targetGate=this.targetGate, targetOut=this.targetOut();const ok=out===targetOut&&gate===targetGate;
-   this.successTime=ok?this.successTime+1/60:0;if(this.successTime>1.1)this.reset();
+   this.successTime=this.output()===this.targetOut()&&this.gateNames[this.gateIndex]===this.targetGate?this.successTime+1/60:0;
+   if(this.successTime>1.0)this.reset();
  },
  draw(){
-   drawHeader('MENCIÓN 03 · COMPUTADORES','#5eff8f','FLUJO DIGITAL · cambia entradas y compuerta para activar la salida');
-   panel(34,112,932,420,'#2e5a3e');
-   const selected=this.sel;
-   // target display
-   panel(60,135,300,150,'#2e5a3e','rgba(20,40,28,.9)');text('DESAFÍO',80,168,18,'#5eff8f','Press Start 2P');text('ACTIVA LA SALIDA',80,205,25);text('con la combinación',80,238,22);text('correcta.',80,266,22);
-   text('TARGET GATE: '+this.targetGate,80,315,17,'#8db49a','Press Start 2P');
-   // circuit
-   const ay=215, by=365, gx=500, outx=810;
-   function node(x,y,label,val,active){ctx.fillStyle=active?'rgba(94,255,143,.12)':'rgba(0,0,0,.25)';ctx.strokeStyle=active?'#5eff8f':'#46604f';ctx.lineWidth=active?4:2;ctx.beginPath();ctx.arc(x,y,52,0,Math.PI*2);ctx.fill();ctx.stroke();text(label,x,y-12,15,active?'#5eff8f':'#9bb1a0','Press Start 2P','center');text(String(val),x,y+28,30,val?'#5eff8f':'#d4dfd7','Press Start 2P','center');}
-   // wires behind nodes
-   ctx.strokeStyle='#365b43';ctx.lineWidth=8;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(180,ay);ctx.lineTo(440,ay);ctx.moveTo(180,by);ctx.lineTo(440,by);ctx.stroke();ctx.beginPath();ctx.moveTo(560,290);ctx.lineTo(outx-45,290);ctx.stroke();
-   if(this.a){ctx.strokeStyle='#5eff8f';ctx.beginPath();ctx.moveTo(180,ay);ctx.lineTo(440,ay);ctx.stroke();}if(this.b){ctx.strokeStyle='#5eff8f';ctx.beginPath();ctx.moveTo(180,by);ctx.lineTo(440,by);ctx.stroke();}
-   node(180,ay,'A',this.a,selected===0);node(180,by,'B',this.b,selected===1);
-   // gate body
-   ctx.fillStyle='rgba(10,25,18,.95)';ctx.strokeStyle=selected===2?'#5eff8f':'#46604f';ctx.lineWidth=selected===2?5:2;ctx.beginPath();ctx.roundRect(440,235,120,110,18);ctx.fill();ctx.stroke();text(this.gateNames[this.gateIndex],500,302,18,'#5eff8f','Press Start 2P','center');
-   // output LED
-   const gate=this.gateNames[this.gateIndex];const out=gate==='AND'?(this.a&this.b):gate==='OR'?(this.a|this.b):(this.a?0:1);pulseCircle(outx,290,35,out?'#5eff8f':'#32483a');text('OUT',outx,350,16,'#b9c9bc','Press Start 2P','center');text(String(out),outx,300,25,out?'#07140f':'#9aa89e','Press Start 2P','center');
-   text('◀ ▲ ▼ ▶',450,390,17,'#9bb1a0','Press Start 2P','center');text('A = cambiar',450,420,19,'#fff','VT323','center');
-   text('NODO SELECCIONADO: '+(selected===0?'ENTRADA A':selected===1?'ENTRADA B':'COMPUERTA'),500,485,17,'#5eff8f','Press Start 2P','center');
+   drawHeader('MENCIÓN 03 · COMPUTADORES','#5eff8f','FLUJO DIGITAL · cambia las entradas y la compuerta para encender la salida');
+   panel(24,108,952,448,'#2e5a3e');
+   /* Barra de desafío: compacta y separada del circuito. */
+   panel(44,128,912,82,'#31553e','rgba(14,31,23,.96)');
+   text('DESAFÍO',64,158,16,'#5eff8f','Press Start 2P');
+   text('CONSIGUE OUT = '+this.targetOut(),64,190,22,'#fff');
+   text('A = '+this.targetA+'   B = '+this.targetB+'   ·   COMPUERTA = '+this.targetGate,310,173,20,'#b9c9bc','VT323','center');
+   /* Circuito central: tres nodos grandes, alineados horizontalmente. */
+   const ay=300,by=405,gx=575,outx=835,gateY=352,selected=this.sel;
+   function node(x,y,label,val,active){ctx.fillStyle=active?'rgba(94,255,143,.12)':'rgba(0,0,0,.28)';ctx.strokeStyle=active?'#5eff8f':'#46604f';ctx.lineWidth=active?4:2;ctx.beginPath();ctx.arc(x,y,45,0,Math.PI*2);ctx.fill();ctx.stroke();text(label,x,y-9,14,active?'#5eff8f':'#9bb1a0','Press Start 2P','center');text(String(val),x,y+24,27,val?'#5eff8f':'#d4dfd7','Press Start 2P','center');}
+   ctx.strokeStyle='#365b43';ctx.lineWidth=8;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(215,ay);ctx.lineTo(510,ay);ctx.moveTo(215,by);ctx.lineTo(510,by);ctx.moveTo(640,gateY);ctx.lineTo(outx-48,gateY);ctx.stroke();
+   if(this.a){ctx.strokeStyle='#5eff8f';ctx.beginPath();ctx.moveTo(215,ay);ctx.lineTo(510,ay);ctx.stroke();}
+   if(this.b){ctx.strokeStyle='#5eff8f';ctx.beginPath();ctx.moveTo(215,by);ctx.lineTo(510,by);ctx.stroke();}
+   node(215,ay,'A',this.a,selected===0);node(215,by,'B',this.b,selected===1);
+   ctx.fillStyle='rgba(10,25,18,.95)';ctx.strokeStyle=selected===2?'#5eff8f':'#46604f';ctx.lineWidth=selected===2?4:2;ctx.beginPath();ctx.roundRect(510,297,130,110,18);ctx.fill();ctx.stroke();
+   text(this.gateNames[this.gateIndex],575,362,18,'#5eff8f','Press Start 2P','center');
+   const out=this.output();pulseCircle(outx,gateY,34,out?'#5eff8f':'#32483a');text(String(out),outx,gateY+9,25,out?'#07140f':'#9aa89e','Press Start 2P','center');text('OUT',outx,gateY+72,15,'#b9c9bc','Press Start 2P','center');
+   /* Ayuda inferior, fuera del dibujo del circuito. */
+   panel(62,478,876,58,'#2e5a3e','rgba(6,18,13,.78)');
+   text('D-PAD',82,501,15,'#5eff8f','Press Start 2P');text('selecciona A / B / COMPUERTA',174,501,19,'#fff');
+   text('A = cambiar',620,501,19,'#fff','VT323');
+   text('NODO: '+(selected===0?'ENTRADA A':selected===1?'ENTRADA B':'COMPUERTA'),500,526,15,'#5eff8f','Press Start 2P','center');
    if(this.successTime>.05)flashSuccess('¡LÓGICA CORRECTA!','#5eff8f');
  }
 };
