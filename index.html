@@ -59,15 +59,15 @@
   /* ---------- MENU ---------- */
   #screen-menu{
     height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:34px; padding:28px 34px;
+    gap:28px; padding:24px 34px;
   }
-  .logos-row{ display:flex; align-items:center; justify-content:center; gap:54px; margin-bottom:4px; }
+  .logos-row{ display:flex; align-items:center; justify-content:center; gap:70px; margin-bottom:2px; }
   .logo-box{
     background:#f4f4f0; border-radius:8px; padding:10px 16px;
     display:flex; align-items:center; justify-content:center;
     box-shadow:0 6px 16px rgba(0,0,0,0.4);
   }
-  .logo-box img{ display:block; height:62px; width:auto; }
+  .logo-box img{ display:block; height:58px; width:auto; }
   .logo-box.placeholder{
     height:56px; width:150px; background:transparent;
     border:2px dashed var(--border); color:var(--text-dim);
@@ -76,24 +76,24 @@
 
   .title-block{ text-align:center; }
   .title-block h1{
-    font-size:30px; margin:0 0 14px 0; letter-spacing:2px;
+    font-size:28px; margin:0 0 12px 0; letter-spacing:2px;
     color:#fff; text-shadow: 3px 3px 0 var(--green-dark), 6px 6px 0 rgba(108,191,58,0.2);
   }
-  .title-block p{ font-size:22px; color:var(--text-dim); margin:0; }
+  .title-block p{ font-size:21px; color:var(--text-dim); margin:0; }
 
-  .cards{ display:grid; grid-template-columns:repeat(4, minmax(190px, 1fr)); gap:34px; width:min(1080px, 92vw); align-items:stretch; }
+  .cards{ display:grid; grid-template-columns:repeat(4, minmax(205px, 1fr)); gap:40px; width:min(1160px, 94vw); align-items:stretch; }
   .card{
-    width:auto; height:245px;
+    width:auto; height:235px;
     background:var(--bg-panel);
     border:3px solid var(--border);
     border-radius:6px;
     display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-    padding:24px 18px 20px;
+    padding:22px 18px 18px;
     position:relative;
     transition:transform .12s, border-color .12s, box-shadow .12s;
   }
-  .card .icon{ width:68px; height:68px; margin-bottom:24px; flex:0 0 auto; }
-  .card .name{ font-size:13px; text-align:center; line-height:1.9; color:var(--text); min-height:52px; display:flex; align-items:center; justify-content:center; }
+  .card .icon{ width:64px; height:64px; margin-bottom:20px; flex:0 0 auto; }
+  .card .name{ font-size:12px; text-align:center; line-height:1.8; color:var(--text); min-height:52px; display:flex; align-items:center; justify-content:center; }
   .card .code{ position:absolute; top:10px; left:12px; font-size:11px; color:var(--text-dim); }
   .card.selected{
     transform:translateY(-10px) scale(1.05);
@@ -137,11 +137,11 @@
 
 
   /* ---------- ARCADE / GAMEPLAY UI ---------- */
-  #screen-game{ display:none; height:100vh; width:100vw; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:18px; }
-  #gameCanvas{ width:min(1000px,96vw); height:auto; aspect-ratio:5/3; background:#07141a; border:4px solid var(--border); border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,229,255,0.03); image-rendering:auto; }
-  #controls-line{ font-size:20px; color:var(--text-dim); text-align:center; margin:0; min-height:24px; }
+  #screen-game{ display:none; height:100vh; width:100vw; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:10px 16px; }
+  #gameCanvas{ width:min(1220px,97vw); height:auto; aspect-ratio:16/9; background:#07141a; border:4px solid var(--border); border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,229,255,0.03); image-rendering:auto; }
+  #controls-line{ font-size:18px; color:var(--text-dim); text-align:center; margin:0; min-height:22px; letter-spacing:.3px; }
   #controls-line b{ color:#fff; }
-  .card::after{ content:'A  ENTRAR'; position:absolute; bottom:9px; font-size:9px; color:#557a63; letter-spacing:.5px; opacity:.8; }
+  .card::after{ content:'A  ENTRAR'; position:absolute; bottom:8px; font-size:9px; color:#557a63; letter-spacing:.5px; opacity:.8; }
 
 </style>
 </head>
@@ -194,7 +194,7 @@
 
 <!-- ===================== GAME ===================== -->
 <div id="screen-game">
-  <canvas id="gameCanvas" width="1000" height="600"></canvas>
+  <canvas id="gameCanvas" width="1200" height="675"></canvas>
   <p id="controls-line"></p>
 </div>
 
@@ -275,14 +275,36 @@ function updateMenu(input){
 }
 
 /* ---------- DRAW HELPERS ---------- */
-function bg(){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#07141a'; ctx.fillRect(0,0,canvas.width,canvas.height); }
-function gridBackground(spacing=40){
-  ctx.strokeStyle='rgba(46,90,62,.25)'; ctx.lineWidth=1;
+function bg(){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#061116'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+function gridBackground(spacing=50){
+  ctx.save();
+  ctx.strokeStyle='rgba(40,88,69,.18)'; ctx.lineWidth=1;
   for(let x=0;x<=canvas.width;x+=spacing){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();}
   for(let y=0;y<=canvas.height;y+=spacing){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
+  // Decorative PCB traces and vias: subtle, denser near the edges so the game remains readable.
+  ctx.strokeStyle='rgba(40,112,77,.34)'; ctx.lineWidth=3; ctx.lineCap='round';
+  const traces=[
+    [[30,135],[130,135],[130,92],[245,92]], [[30,565],[180,565],[180,615],[330,615]],
+    [[950,95],[1080,95],[1080,145],[1170,145]], [[920,610],[1030,610],[1030,555],[1170,555]],
+    [[65,245],[115,245],[115,210],[190,210]], [[1000,250],[1070,250],[1070,210],[1150,210]]
+  ];
+  traces.forEach(path=>{ctx.beginPath();path.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();});
+  const vias=[[130,135],[245,92],[180,565],[330,615],[950,95],[1080,145],[1030,610],[1170,555],[115,210],[1070,250]];
+  vias.forEach(([x,y])=>{ctx.fillStyle='#163b2a';ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#2c704a';ctx.lineWidth=2;ctx.stroke();});
+  ctx.restore();
+}
+function pcbTexture(x,y,w,h,accent='#2e5a3e'){
+  ctx.save();
+  ctx.fillStyle='rgba(4,15,18,.24)';ctx.fillRect(x,y,w,h);
+  ctx.strokeStyle='rgba(49,105,77,.22)';ctx.lineWidth=2;
+  for(let gx=x+18;gx<x+w;gx+=72){ctx.beginPath();ctx.moveTo(gx,y);ctx.lineTo(gx,y+h);ctx.stroke();}
+  for(let gy=y+18;gy<y+h;gy+=72){ctx.beginPath();ctx.moveTo(x,gy);ctx.lineTo(x+w,gy);ctx.stroke();}
+  ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.globalAlpha=.45;
+  for(let i=0;i<7;i++){const xx=x+25+i*95;const yy=y+35+(i%3)*80;ctx.beginPath();ctx.moveTo(xx,yy);ctx.lineTo(xx+45,yy);ctx.lineTo(xx+60,yy+20);ctx.lineTo(xx+100,yy+20);ctx.stroke();ctx.fillStyle=accent;ctx.beginPath();ctx.arc(xx,yy,4,0,Math.PI*2);ctx.fill();}
+  ctx.restore();
 }
 function drawHeader(title,color,subtitle=''){
-  bg(); gridBackground(50);
+  bg(); gridBackground(50); pcbTexture(20,105,canvas.width-40,canvas.height-125,color);
   ctx.font="22px 'Press Start 2P'"; ctx.fillStyle=color; ctx.textAlign='left'; ctx.fillText(title,28,42);
   if(subtitle){ctx.font="22px 'VT323'";ctx.fillStyle='#91a99a';ctx.fillText(subtitle,28,70);}
   ctx.strokeStyle='#1e3d2b';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(24,88);ctx.lineTo(canvas.width-24,88);ctx.stroke();
@@ -402,43 +424,47 @@ const telecom={
    D-pad = selecciona nodo. A = conmuta entrada o cambia compuerta.
    ============================================================ */
 const computadores={
- controlsHint:'D-PAD <b>seleccionar</b> · A <b>cambiar</b> · B <b>nuevo desafío</b> · START <b>menú</b>',
- gateNames:['AND','OR','NOT'],gateIndex:0,a:0,b:0,targetA:1,targetB:1,targetGate:'AND',successTime:0,sel:0,
- reset(){this.gateIndex=Math.floor(Math.random()*3);this.a=Math.random()>.5?1:0;this.b=Math.random()>.5?1:0;this.targetA=Math.random()>.5?1:0;this.targetB=Math.random()>.5?1:0;this.targetGate=this.gateNames[this.gateIndex];this.successTime=0;this.sel=0;},
+ controlsHint:'D-PAD <b>seleccionar</b> · A <b>cambiar</b> · B <b>VERIFICAR</b> · START <b>menú</b>',
+ gateNames:['AND','OR','NOT'],gateIndex:0,a:0,b:0,targetA:1,targetB:1,targetGate:'AND',checked:false,feedback:'CONFIGURA EL CIRCUITO Y PULSA B',feedbackColor:'#91a99a',successTime:0,sel:0,
+ reset(){this.gateIndex=Math.floor(Math.random()*3);this.targetGate=this.gateNames[this.gateIndex];this.targetA=Math.random()>.5?1:0;this.targetB=Math.random()>.5?1:0;this.a=Math.random()>.5?1:0;this.b=Math.random()>.5?1:0;this.checked=false;this.feedback='CONFIGURA EL CIRCUITO Y PULSA B';this.feedbackColor='#91a99a';this.successTime=0;this.sel=0;},
  output(){const g=this.gateNames[this.gateIndex];return g==='AND'?(this.a&this.b):g==='OR'?(this.a|this.b):(this.a?0:1);},
  targetOut(){const g=this.targetGate;return g==='AND'?(this.targetA&this.targetB):g==='OR'?(this.targetA|this.targetB):(this.targetA?0:1);},
+ verify(){
+   this.checked=true;
+   const ok=this.a===this.targetA&&this.b===this.targetB&&this.gateNames[this.gateIndex]===this.targetGate;
+   if(ok){this.feedback='¡CONFIGURACIÓN CORRECTA!';this.feedbackColor='#5eff8f';this.successTime=1.25;}
+   else {this.feedback='NO COINCIDE · SIGUE AJUSTANDO';this.feedbackColor='#ffcc55';this.successTime=0;}
+ },
  update(input){
    if(input.pressed.left)this.sel=(this.sel+2)%3;if(input.pressed.right)this.sel=(this.sel+1)%3;
    if(input.pressed.up)this.sel=(this.sel+2)%3;if(input.pressed.down)this.sel=(this.sel+1)%3;
-   if(input.pressed.a){if(this.sel===0)this.a^=1;else if(this.sel===1)this.b^=1;else this.gateIndex=(this.gateIndex+1)%3;}
-   if(input.pressed.b)this.reset();
-   this.successTime=this.output()===this.targetOut()&&this.gateNames[this.gateIndex]===this.targetGate?this.successTime+1/60:0;
-   if(this.successTime>1.0)this.reset();
+   if(input.pressed.a){if(this.sel===0)this.a^=1;else if(this.sel===1)this.b^=1;else this.gateIndex=(this.gateIndex+1)%3;this.checked=false;this.feedback='CONFIGURA EL CIRCUITO Y PULSA B';this.feedbackColor='#91a99a';}
+   if(input.pressed.b)this.verify();
+   if(this.successTime>0){this.successTime-=1/60;if(this.successTime<=0)this.reset();}
  },
  draw(){
-   drawHeader('MENCIÓN 03 · COMPUTADORES','#5eff8f','FLUJO DIGITAL · cambia las entradas y la compuerta para encender la salida');
-   panel(24,108,952,448,'#2e5a3e');
-   /* Barra de desafío: compacta y separada del circuito. */
-   panel(44,128,912,82,'#31553e','rgba(14,31,23,.96)');
-   text('DESAFÍO',64,158,16,'#5eff8f','Press Start 2P');
-   text('CONSIGUE OUT = '+this.targetOut(),64,190,22,'#fff');
-   text('A = '+this.targetA+'   B = '+this.targetB+'   ·   COMPUERTA = '+this.targetGate,310,173,20,'#b9c9bc','VT323','center');
-   /* Circuito central: tres nodos grandes, alineados horizontalmente. */
-   const ay=300,by=405,gx=575,outx=835,gateY=352,selected=this.sel;
-   function node(x,y,label,val,active){ctx.fillStyle=active?'rgba(94,255,143,.12)':'rgba(0,0,0,.28)';ctx.strokeStyle=active?'#5eff8f':'#46604f';ctx.lineWidth=active?4:2;ctx.beginPath();ctx.arc(x,y,45,0,Math.PI*2);ctx.fill();ctx.stroke();text(label,x,y-9,14,active?'#5eff8f':'#9bb1a0','Press Start 2P','center');text(String(val),x,y+24,27,val?'#5eff8f':'#d4dfd7','Press Start 2P','center');}
-   ctx.strokeStyle='#365b43';ctx.lineWidth=8;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(215,ay);ctx.lineTo(510,ay);ctx.moveTo(215,by);ctx.lineTo(510,by);ctx.moveTo(640,gateY);ctx.lineTo(outx-48,gateY);ctx.stroke();
-   if(this.a){ctx.strokeStyle='#5eff8f';ctx.beginPath();ctx.moveTo(215,ay);ctx.lineTo(510,ay);ctx.stroke();}
-   if(this.b){ctx.strokeStyle='#5eff8f';ctx.beginPath();ctx.moveTo(215,by);ctx.lineTo(510,by);ctx.stroke();}
-   node(215,ay,'A',this.a,selected===0);node(215,by,'B',this.b,selected===1);
-   ctx.fillStyle='rgba(10,25,18,.95)';ctx.strokeStyle=selected===2?'#5eff8f':'#46604f';ctx.lineWidth=selected===2?4:2;ctx.beginPath();ctx.roundRect(510,297,130,110,18);ctx.fill();ctx.stroke();
-   text(this.gateNames[this.gateIndex],575,362,18,'#5eff8f','Press Start 2P','center');
-   const out=this.output();pulseCircle(outx,gateY,34,out?'#5eff8f':'#32483a');text(String(out),outx,gateY+9,25,out?'#07140f':'#9aa89e','Press Start 2P','center');text('OUT',outx,gateY+72,15,'#b9c9bc','Press Start 2P','center');
-   /* Ayuda inferior, fuera del dibujo del circuito. */
-   panel(62,478,876,58,'#2e5a3e','rgba(6,18,13,.78)');
-   text('D-PAD',82,501,15,'#5eff8f','Press Start 2P');text('selecciona A / B / COMPUERTA',174,501,19,'#fff');
-   text('A = cambiar',620,501,19,'#fff','VT323');
-   text('NODO: '+(selected===0?'ENTRADA A':selected===1?'ENTRADA B':'COMPUERTA'),500,526,15,'#5eff8f','Press Start 2P','center');
-   if(this.successTime>.05)flashSuccess('¡LÓGICA CORRECTA!','#5eff8f');
+   drawHeader('MENCIÓN 03 · COMPUTADORES','#5eff8f','FLUJO DIGITAL · configura el circuito para que coincida con el desafío');
+   panel(24,108,1152,545,'#2e5a3e','rgba(5,18,14,.82)');
+   panel(48,130,1104,92,'#31553e','rgba(9,27,19,.96)');
+   text('DESAFÍO',70,163,17,'#5eff8f','Press Start 2P');
+   text('A = '+this.targetA+'    B = '+this.targetB+'    COMPUERTA = '+this.targetGate+'    →    OUT = '+this.targetOut(),70,198,22,'#fff','VT323');
+   text('NO SE COMPRUEBA SOLO · PULSA B PARA VERIFICAR',780,163,14,'#ffcc55','Press Start 2P','right');
+   // Central circuit area
+   const ay=335,by=485,gx=600,gateY=410,outx=955,selected=this.sel;
+   function node(x,y,label,val,active){ctx.fillStyle=active?'rgba(94,255,143,.13)':'rgba(0,0,0,.28)';ctx.strokeStyle=active?'#5eff8f':'#46604f';ctx.lineWidth=active?4:2;ctx.beginPath();ctx.arc(x,y,58,0,Math.PI*2);ctx.fill();ctx.stroke();text(label,x,y-12,15,active?'#5eff8f':'#9bb1a0','Press Start 2P','center');text(String(val),x,y+29,34,val?'#5eff8f':'#d4dfd7','Press Start 2P','center');}
+   // PCB-like traces
+   ctx.lineCap='round';ctx.lineWidth=11;ctx.strokeStyle='#27483a';ctx.beginPath();ctx.moveTo(260,ay);ctx.lineTo(530,ay);ctx.lineTo(530,gateY);ctx.moveTo(260,by);ctx.lineTo(500,by);ctx.lineTo(500,gateY);ctx.lineTo(530,gateY);ctx.moveTo(670,gateY);ctx.lineTo(outx-70,gateY);ctx.stroke();
+   if(this.a){ctx.strokeStyle='#5eff8f';ctx.beginPath();ctx.moveTo(260,ay);ctx.lineTo(530,ay);ctx.lineTo(530,gateY);ctx.stroke();}
+   if(this.b){ctx.strokeStyle='#5eff8f';ctx.beginPath();ctx.moveTo(260,by);ctx.lineTo(500,by);ctx.lineTo(500,gateY);ctx.lineTo(530,gateY);ctx.stroke();}
+   node(200,ay,'ENTRADA A',this.a,selected===0);node(200,by,'ENTRADA B',this.b,selected===1);
+   ctx.fillStyle='rgba(8,24,17,.97)';ctx.strokeStyle=selected===2?'#5eff8f':'#46604f';ctx.lineWidth=selected===2?4:2;ctx.beginPath();ctx.roundRect(530,350,140,120,20);ctx.fill();ctx.stroke();
+   text(this.gateNames[this.gateIndex],600,418,19,'#5eff8f','Press Start 2P','center');text('COMPUERTA',600,446,13,'#91a99a','VT323','center');
+   const out=this.output();pulseCircle(outx,gateY,43,out?'#5eff8f':'#31473b');text(String(out),outx,gateY+11,31,out?'#07140f':'#9aa89e','Press Start 2P','center');text('SALIDA',outx,gateY+78,15,'#b9c9bc','Press Start 2P','center');
+   // Selection rail
+   panel(300,565,650,58,'#2e5a3e','rgba(5,18,13,.9)');
+   text('SELECCIONADO: '+(selected===0?'ENTRADA A':selected===1?'ENTRADA B':'COMPUERTA'),625,590,15,'#5eff8f','Press Start 2P','center');
+   text(this.feedback,600,614,16,this.feedbackColor,'VT323','center');
+   if(this.successTime>0.2)flashSuccess('¡LÓGICA CORRECTA!','#5eff8f');
  }
 };
 
@@ -447,39 +473,54 @@ const computadores={
    Izq/Der = dial correctivo. A = perturbación.
    ============================================================ */
 const control={
- controlsHint:'◀▶ <b>girar perilla</b> · A <b>perturbar sistema</b> · B <b>reiniciar</b> · START <b>menú</b>',
- theta:.08,omega:0,x:500,v:0,dial:0,stableTime:0,status:'SISTEMA LISTO',statusColor:'#ff6b3d',disturb:0,
- reset(){this.theta=(Math.random()>.5?1:-1)*(.08+Math.random()*.05);this.omega=0;this.x=500;this.v=0;this.dial=0;this.stableTime=0;this.status='SISTEMA LISTO';this.statusColor='#ff6b3d';this.disturb=0;},
+ controlsHint:'◀▶ <b>mover carro</b> · A <b>ráfaga</b> · B <b>reiniciar</b> · START <b>menú</b>',
+ theta:.08,omega:0,x:600,v:0,stableTime:0,status:'MANTÉN EL PÉNDULO VERTICAL',statusColor:'#ff6b3d',gust:0,
+ reset(){this.theta=(Math.random()>.5?1:-1)*(.08+Math.random()*.06);this.omega=0;this.x=600;this.v=0;this.stableTime=0;this.status='MANTÉN EL PÉNDULO VERTICAL';this.statusColor='#ff6b3d';this.gust=0;},
  update(input){
-   if(input.pressed.left)this.dial=Math.max(-1,this.dial-.08);if(input.pressed.right)this.dial=Math.min(1,this.dial+.08);
-   if(input.pressed.a){this.omega+=(Math.random()>.5?1:-1)*(.45+.35*Math.random());this.disturb=1;this.status='¡PERTURBACIÓN APLICADA!';this.statusColor='#00e5ff';}
+   const dt=1/60; const drive=(input.held.right?1:0)-(input.held.left?1:0);
+   if(input.pressed.a){this.omega+=(Math.random()>.5?1:-1)*(.65+.35*Math.random());this.gust=1;this.status='¡RÁFAGA! CORRIGE EL PÉNDULO';this.statusColor='#00e5ff';}
    if(input.pressed.b)this.reset();
-   // Simple game-friendly dynamic model: dial supplies corrective angular acceleration.
-   const dt=1/60;const controlForce=this.dial*3.6;this.omega += (9.4*Math.sin(this.theta)-controlForce)*dt;this.theta+=this.omega*dt;this.omega*=.985;
-   this.v += (-this.x+500)*.002 + this.dial*.85;this.v*=.88;this.x+=this.v;this.x=Math.max(120,Math.min(880,this.x));this.disturb*=.94;
-   const stable=Math.abs(this.theta)<.045&&Math.abs(this.omega)<.09&&Math.abs(this.x-500)<65;
+   // Simple, game-friendly inverted-pendulum model. The player moves the cart directly.
+   const accel=drive*260;
+   this.v+=accel*dt; this.v*=.86; this.x+=this.v*dt; this.x=Math.max(115,Math.min(1085,this.x));
+   this.omega+=(7.8*Math.sin(this.theta)-drive*4.2)*dt; this.omega*=.992; this.theta+=this.omega*dt;
+   this.gust*=.94;
+   const stable=Math.abs(this.theta)<.065&&Math.abs(this.omega)<.11&&Math.abs(this.x-600)<145;
    this.stableTime=stable?this.stableTime+dt:0;
-   if(stable){this.status='SISTEMA ESTABLE';this.statusColor='#5eff8f';}else if(Math.abs(this.theta)>1.15||this.x<=120||this.x>=880){this.status='¡SISTEMA INESTABLE!';this.statusColor='#ff4c4c';this.stableTime=0;this.reset();}
+   if(stable){this.status='SISTEMA ESTABLE';this.statusColor='#5eff8f';}
+   else if(this.status==='SISTEMA ESTABLE'){this.status='CORRIGE LA INCLINACIÓN';this.statusColor='#ffcc55';}
+   if(Math.abs(this.theta)>1.25||this.x<=115||this.x>=1085){this.status='¡PÉNDULO CAÍDO!';this.statusColor='#ff4c4c';this.reset();}
+   if(this.stableTime>3.0)this.reset();
  },
  draw(){
-   drawHeader('MENCIÓN 04 · CONTROL AUTOMÁTICO','#ff6b3d','PÉNDULO INVERTIDO · encuentra el equilibrio con la acción correctiva');
-   panel(30,112,220,420,'#6b3d2d');text('ACCIÓN',55,150,18,'#ff6b3d','Press Start 2P');
-   // giant dial
-   const dx=140,dy=325,r=78;ctx.save();ctx.translate(dx,dy);ctx.shadowColor=this.statusColor;ctx.shadowBlur=this.statusColor==='#5eff8f'?25:8;ctx.fillStyle='#13231d';ctx.strokeStyle=this.statusColor;ctx.lineWidth=7;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.shadowBlur=0;
-   for(let i=-5;i<=5;i++){const a=(-Math.PI*.75)+(i/10)*(Math.PI*1.5);ctx.strokeStyle=i===0?'#fff':'#46604f';ctx.lineWidth=i===0?5:2;ctx.beginPath();ctx.moveTo(Math.cos(a)*r*.72,Math.sin(a)*r*.72);ctx.lineTo(Math.cos(a)*r*.88,Math.sin(a)*r*.88);ctx.stroke();}
-   const a=(-Math.PI*.75)+((this.dial+1)/2)*(Math.PI*1.5);ctx.strokeStyle='#ffcc00';ctx.lineWidth=8;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(Math.cos(a)*15,Math.sin(a)*15);ctx.lineTo(Math.cos(a)*r*.68,Math.sin(a)*r*.68);ctx.stroke();ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(0,0,12,0,Math.PI*2);ctx.fill();ctx.restore();
-   text('◀      ▶',65,440,18,'#fff','Press Start 2P');text('DIAL '+(this.dial*100).toFixed(0),65,478,16,this.statusColor,'Press Start 2P');
-   panel(275,112,690,420,'#6b3d2d');text(this.status,300,150,18,this.statusColor,'Press Start 2P');
-   const railY=410, left=335,right=905;ctx.strokeStyle='#596c63';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(left,railY);ctx.lineTo(right,railY);ctx.stroke();
-   // center stability zone
-   ctx.fillStyle='rgba(94,255,143,.10)';ctx.fillRect(470,325,120,95);ctx.strokeStyle='#3b7350';ctx.setLineDash([5,5]);ctx.strokeRect(470,325,120,95);ctx.setLineDash([]);
+   drawHeader('MENCIÓN 04 · CONTROL AUTOMÁTICO','#ff6b3d','PÉNDULO INVERTIDO · mueve el carro para mantener la varilla en equilibrio');
+   panel(24,108,1152,545,'#6b3d2d','rgba(12,20,17,.84)');
+   // Instruction card
+   panel(48,130,1104,88,'#6b3d2d','rgba(22,25,20,.96)');
+   text('MISIÓN',72,163,17,'#ff6b3d','Press Start 2P');
+   text('MUEVE EL CARRO PARA QUE EL PÉNDULO NO SE CAIGA',72,197,23,'#fff','VT323');
+   text('◀▶ = MOVER    A = RÁFAGA',1080,170,15,'#ffcc55','Press Start 2P','right');
+   // playfield
+   const railY=485,left=135,right=1065,cartW=104,cartH=34,cartY=railY-cartH-10;
+   ctx.fillStyle='rgba(94,255,143,.09)';ctx.fillRect(445,350,310,135);ctx.strokeStyle='#3b7350';ctx.setLineDash([8,7]);ctx.lineWidth=2;ctx.strokeRect(445,350,310,135);ctx.setLineDash([]);
+   text('ZONA DE EQUILIBRIO',600,374,15,'#5eff8f','Press Start 2P','center');
+   // rail and end stops
+   ctx.strokeStyle='#6c7972';ctx.lineWidth=12;ctx.beginPath();ctx.moveTo(left,railY);ctx.lineTo(right,railY);ctx.stroke();
+   ctx.fillStyle='#333f3a';ctx.fillRect(left-12,railY-25,24,50);ctx.fillRect(right-12,railY-25,24,50);
    // cart
-   const cartY=railY-35;ctx.fillStyle='#ff6b3d';ctx.fillRect(this.x-42,cartY,84,28);ctx.fillStyle='#c8d0ca';ctx.beginPath();ctx.arc(this.x-23,cartY+30,9,0,Math.PI*2);ctx.arc(this.x+23,cartY+30,9,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle='#ff6b3d';ctx.fillRect(this.x-cartW/2,cartY,cartW,cartH);ctx.fillStyle='#bfc8c1';ctx.beginPath();ctx.arc(this.x-30,railY+4,13,0,Math.PI*2);ctx.arc(this.x+30,railY+4,13,0,Math.PI*2);ctx.fill();
    // pendulum
-   const L=125,endX=this.x+L*Math.sin(this.theta),endY=cartY-L*Math.cos(this.theta);ctx.strokeStyle='#ffcc55';ctx.lineWidth=10;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(this.x,cartY);ctx.lineTo(endX,endY);ctx.stroke();ctx.fillStyle=this.statusColor;ctx.beginPath();ctx.arc(endX,endY,18,0,Math.PI*2);ctx.fill();
-   text('ZONA ESTABLE',530,360,15,'#5eff8f','Press Start 2P','center');text('A = empujón / ráfaga',610,475,20,'#fff','VT323','center');
-   const stability=Math.max(0,1-Math.min(1,Math.abs(this.theta)/.5));ctx.strokeStyle='#32483a';ctx.strokeRect(310,500,590,15);ctx.fillStyle=this.statusColor;ctx.fillRect(312,502,586*stability,11);
-   text('ESTABILIDAD',310,525,14,'#9bb1a0','Press Start 2P');
+   const L=185,endX=this.x+L*Math.sin(this.theta),endY=cartY-L*Math.cos(this.theta);
+   ctx.strokeStyle='#ffcc55';ctx.lineWidth=13;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(this.x,cartY);ctx.lineTo(endX,endY);ctx.stroke();
+   ctx.fillStyle=this.statusColor;ctx.shadowColor=this.statusColor;ctx.shadowBlur=20;ctx.beginPath();ctx.arc(endX,endY,24,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+   // Center marker and current lean
+   ctx.strokeStyle='#5eff8f';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(600,300);ctx.lineTo(600,railY);ctx.stroke();
+   text(this.status,600,275,20,this.statusColor,'Press Start 2P','center');
+   text('INCLINACIÓN: '+(this.theta*180/Math.PI).toFixed(1)+'°',600,320,17,'#c9d5ce','VT323','center');
+   // bottom feedback
+   const stability=Math.max(0,1-Math.min(1,Math.abs(this.theta)/.35));
+   text('ESTABILIDAD',120,575,14,'#b5c3bb','Press Start 2P');ctx.strokeStyle='#31473b';ctx.strokeRect(270,558,650,20);ctx.fillStyle=this.statusColor;ctx.fillRect(272,560,646*stability,16);
+   text('LLEVA LA VARILLA AL CENTRO Y MANTÉNLA AHÍ',600,620,17,'#fff','VT323','center');
    if(this.status==='SISTEMA ESTABLE')flashSuccess('¡EQUILIBRIO!','#5eff8f');
  }
 };
