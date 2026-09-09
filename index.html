@@ -117,13 +117,22 @@
   }
   #controls-line{ font-size:19px; color:var(--text-dim); text-align:center; }
   #controls-line b{ color:#fff; }
+
+
+  /* ---------- ARCADE / GAMEPLAY UI ---------- */
+  #screen-game{ display:none; height:100vh; width:100vw; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:18px; }
+  #gameCanvas{ width:min(1000px,96vw); height:auto; aspect-ratio:5/3; background:#07141a; border:4px solid var(--border); border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,229,255,0.03); image-rendering:auto; }
+  #controls-line{ font-size:20px; color:var(--text-dim); text-align:center; margin:0; min-height:24px; }
+  #controls-line b{ color:#fff; }
+  .card::after{ content:'A  ENTRAR'; position:absolute; bottom:9px; font-size:9px; color:#557a63; letter-spacing:.5px; opacity:.8; }
+
 </style>
 </head>
 <body>
 
 <div id="crt"></div>
 <div id="vignette"></div>
-<div id="gp-status">🎮 Control no detectado — presiona un botón</div>
+<div id="gp-status">CONTROL: NO DETECTADO</div>
 
 <!-- ===================== MENU ===================== -->
 <div id="screen-menu">
@@ -133,7 +142,7 @@
     </div>
     <div class="title-block">
       <h1 class="pixel">ARCADE DE MENCIONES</h1>
-      <p>Departamento de Electrónica — UTFSM</p>
+      <p>Departamento de Electrónica · UTFSM</p>
     </div>
     <div class="logo-box">
       <img src="data:image/jpeg;base64,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" alt="Departamento de Electrónica">
@@ -163,538 +172,285 @@
     </div>
   </div>
 
-  <p class="hint">◀ ▶ para elegir &nbsp;·&nbsp; <b>A</b> para entrar</p>
+  <p class="hint">◀ ▶ <b>seleccionar</b> &nbsp;·&nbsp; <b>A</b> entrar &nbsp;·&nbsp; <b>START</b> menú</p>
 </div>
 
 <!-- ===================== GAME ===================== -->
 <div id="screen-game">
-  <canvas id="gameCanvas" width="860" height="440"></canvas>
+  <canvas id="gameCanvas" width="1000" height="600"></canvas>
   <p id="controls-line"></p>
 </div>
 
 <script>
 /* ============================================================
-   INPUT: Gamepad API (NES-style USB pad) + keyboard fallback
+   ARCADE DE MENCIONES — UTFSM
+   Control principal: pad USB clásico tipo NES.
+   Teclado de respaldo: flechas + Z/A + X/B + Enter/Esc.
    ============================================================ */
 const keys = {};
-window.addEventListener('keydown', e => keys[e.key] = true);
-window.addEventListener('keyup',   e => keys[e.key] = false);
-
-// Mouse click support (Makey Makey's default 6th input is a left-click)
-let mouseHeld = false;
-window.addEventListener('mousedown', () => mouseHeld = true);
-window.addEventListener('mouseup',   () => mouseHeld = false);
+window.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Enter','Escape'].includes(e.key)) e.preventDefault();
+});
+window.addEventListener('keyup', e => keys[e.key] = false);
 
 let gpIndex = null;
-const gpStatusEl = document.getElementById('gp-status');
-window.addEventListener('gamepadconnected', e => {
-  gpIndex = e.gamepad.index;
-  gpStatusEl.textContent = '🎮 Control conectado: ' + e.gamepad.id.slice(0,28);
-  gpStatusEl.classList.add('connected');
-});
-window.addEventListener('gamepaddisconnected', () => {
-  gpIndex = null;
-  gpStatusEl.textContent = '🎮 Control no detectado — presiona un botón';
-  gpStatusEl.classList.remove('connected');
-});
-
 let prevInput = {up:false,down:false,left:false,right:false,a:false,b:false,start:false};
+const gpStatusEl = document.getElementById('gp-status');
+
+function setGamepadStatus(connected, id=''){
+  gpStatusEl.textContent = connected ? 'CONTROL: CONECTADO' : 'CONTROL: NO DETECTADO';
+  gpStatusEl.classList.toggle('connected', connected);
+  if(connected && id) gpStatusEl.title = id;
+}
+window.addEventListener('gamepadconnected', e => { gpIndex=e.gamepad.index; setGamepadStatus(true,e.gamepad.id); });
+window.addEventListener('gamepaddisconnected', e => { if(e.gamepad.index===gpIndex) gpIndex=null; setGamepadStatus(gpIndex!==null); });
+
+function detectGamepad(){
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  if(gpIndex!==null && pads[gpIndex]) return pads[gpIndex];
+  for(let i=0;i<pads.length;i++) if(pads[i]){ gpIndex=i; setGamepadStatus(true,pads[i].id); return pads[i]; }
+  return null;
+}
 
 function readInput(){
   const raw = {up:false,down:false,left:false,right:false,a:false,b:false,start:false};
-  if(keys['ArrowUp'])    raw.up=true;
-  if(keys['ArrowDown'])  raw.down=true;
-  if(keys['ArrowLeft'])  raw.left=true;
-  if(keys['ArrowRight']) raw.right=true;
-  if(keys['z']||keys['Z']||keys[' ']) raw.a=true;      // Space = Makey Makey front pad
-  if(keys['x']||keys['X']||mouseHeld) raw.b=true;       // Click = Makey Makey front pad
-  if(keys['Enter']||keys['Escape']) raw.start=true;
+  raw.up=!!keys.ArrowUp; raw.down=!!keys.ArrowDown; raw.left=!!keys.ArrowLeft; raw.right=!!keys.ArrowRight;
+  raw.a=!!(keys.z||keys.Z||keys[' ']);
+  raw.b=!!(keys.x||keys.X);
+  raw.start=!!(keys.Enter||keys.Escape);
 
-  if(gpIndex!==null){
-    const pads = navigator.getGamepads();
-    const gp = pads[gpIndex];
-    if(gp){
-      const ax = gp.axes[0]||0, ay = gp.axes[1]||0;
-      if((gp.buttons[12]&&gp.buttons[12].pressed) || ay < -0.5) raw.up=true;
-      if((gp.buttons[13]&&gp.buttons[13].pressed) || ay >  0.5) raw.down=true;
-      if((gp.buttons[14]&&gp.buttons[14].pressed) || ax < -0.5) raw.left=true;
-      if((gp.buttons[15]&&gp.buttons[15].pressed) || ax >  0.5) raw.right=true;
-      if(gp.buttons[0]&&gp.buttons[0].pressed) raw.a=true;
-      if(gp.buttons[1]&&gp.buttons[1].pressed) raw.b=true;
-      if((gp.buttons[9]&&gp.buttons[9].pressed) || (gp.buttons[8]&&gp.buttons[8].pressed)) raw.start=true;
-      if(!gpStatusEl.classList.contains('connected')){
-        gpStatusEl.textContent = '🎮 Control conectado: ' + gp.id.slice(0,28);
-        gpStatusEl.classList.add('connected');
-      }
-    }
+  const gp=detectGamepad();
+  if(gp){
+    const ax=gp.axes?.[0]||0, ay=gp.axes?.[1]||0;
+    if((gp.buttons?.[12]?.pressed)||ay<-0.5) raw.up=true;
+    if((gp.buttons?.[13]?.pressed)||ay>0.5) raw.down=true;
+    if((gp.buttons?.[14]?.pressed)||ax<-0.5) raw.left=true;
+    if((gp.buttons?.[15]?.pressed)||ax>0.5) raw.right=true;
+    if(gp.buttons?.[0]?.pressed) raw.a=true;
+    if(gp.buttons?.[1]?.pressed) raw.b=true;
+    if(gp.buttons?.[9]?.pressed || gp.buttons?.[8]?.pressed) raw.start=true;
   }
-  const pressed = {};
-  for(const k in raw) pressed[k] = raw[k] && !prevInput[k];
-  prevInput = raw;
-  return {held:raw, pressed:pressed};
+  const pressed={};
+  for(const k in raw) pressed[k]=raw[k]&&!prevInput[k];
+  prevInput=raw;
+  return {held:raw,pressed};
 }
 
-/* ============================================================
-   SCREEN / MENU MANAGEMENT
-   ============================================================ */
-const screenMenu = document.getElementById('screen-menu');
-const screenGame = document.getElementById('screen-game');
-const controlsLine = document.getElementById('controls-line');
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-
-const cardEls = Array.from(document.querySelectorAll('.card'));
-const mentionOrder = ['potencias','telecom','computadores','control'];
-let menuSelection = 0;
-let currentScreen = 'menu'; // 'menu' | one of mentionOrder
-
-function renderMenuSelection(){
-  cardEls.forEach((el,i)=> el.classList.toggle('selected', i===menuSelection));
-}
+/* ---------- SCREEN / MENU ---------- */
+const screenMenu=document.getElementById('screen-menu');
+const screenGame=document.getElementById('screen-game');
+const controlsLine=document.getElementById('controls-line');
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+const cardEls=[...document.querySelectorAll('.card')];
+const mentionOrder=['potencias','telecom','computadores','control'];
+let menuSelection=0, currentScreen='menu';
+function renderMenuSelection(){ cardEls.forEach((el,i)=>el.classList.toggle('selected',i===menuSelection)); }
 renderMenuSelection();
-
-function enterGame(id){
-  currentScreen = id;
-  screenMenu.style.display = 'none';
-  screenGame.style.display = 'flex';
-  controlsLine.innerHTML = games[id].controlsHint;
-  games[id].reset();
-}
-
-function backToMenu(){
-  currentScreen = 'menu';
-  screenGame.style.display = 'none';
-  screenMenu.style.display = 'flex';
-  renderMenuSelection();
-}
-
+function enterGame(id){ currentScreen=id; screenMenu.style.display='none'; screenGame.style.display='flex'; controlsLine.innerHTML=games[id].controlsHint; games[id].reset(); }
+function backToMenu(){ currentScreen='menu'; screenGame.style.display='none'; screenMenu.style.display='flex'; renderMenuSelection(); }
 function updateMenu(input){
-  if(input.pressed.left)  menuSelection = (menuSelection + mentionOrder.length - 1) % mentionOrder.length;
-  if(input.pressed.right) menuSelection = (menuSelection + 1) % mentionOrder.length;
-  if(input.pressed.left || input.pressed.right) renderMenuSelection();
-  if(input.pressed.a || input.pressed.start) enterGame(mentionOrder[menuSelection]);
+  if(input.pressed.left) menuSelection=(menuSelection+3)%4;
+  if(input.pressed.right) menuSelection=(menuSelection+1)%4;
+  if(input.pressed.left||input.pressed.right) renderMenuSelection();
+  if(input.pressed.a||input.pressed.start) enterGame(mentionOrder[menuSelection]);
 }
+
+/* ---------- DRAW HELPERS ---------- */
+function bg(){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#07141a'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+function gridBackground(spacing=40){
+  ctx.strokeStyle='rgba(46,90,62,.25)'; ctx.lineWidth=1;
+  for(let x=0;x<=canvas.width;x+=spacing){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();}
+  for(let y=0;y<=canvas.height;y+=spacing){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
+}
+function drawHeader(title,color,subtitle=''){
+  bg(); gridBackground(50);
+  ctx.font="22px 'Press Start 2P'"; ctx.fillStyle=color; ctx.textAlign='left'; ctx.fillText(title,28,42);
+  if(subtitle){ctx.font="22px 'VT323'";ctx.fillStyle='#91a99a';ctx.fillText(subtitle,28,70);}
+  ctx.strokeStyle='#1e3d2b';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(24,88);ctx.lineTo(canvas.width-24,88);ctx.stroke();
+}
+function panel(x,y,w,h,stroke='#2e5a3e',fill='rgba(8,20,16,.72)'){
+  ctx.fillStyle=fill;ctx.fillRect(x,y,w,h);ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.strokeRect(x,y,w,h);
+}
+function text(t,x,y,size=18,color='#e8f0ea',font='VT323',align='left'){
+  ctx.font=`${size}px '${font}'`;ctx.fillStyle=color;ctx.textAlign=align;ctx.fillText(t,x,y);ctx.textAlign='left';
+}
+function flashSuccess(t,color){ctx.save();ctx.font="28px 'Press Start 2P'";ctx.textAlign='center';ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=18;ctx.fillText(t,canvas.width/2,canvas.height/2);ctx.restore();}
+function pulseCircle(x,y,r,color){ctx.save();ctx.shadowColor=color;ctx.shadowBlur=18;ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.restore();}
 
 /* ============================================================
-   SHARED DRAW HELPERS
+   GAME 1 — POTENCIAS / CIRCUITOS
+   D-pad = cursor. A = rotate. B = nuevo circuito.
    ============================================================ */
-function drawHeader(title, color, subtitle){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = '#0f231a';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.font = "16px 'Press Start 2P'";
-  ctx.fillStyle = color;
-  ctx.textAlign = 'left';
-  ctx.fillText(title, 26, 40);
-  if(subtitle){
-    ctx.font = "18px 'VT323'";
-    ctx.fillStyle = '#8888aa';
-    ctx.fillText(subtitle, 26, 64);
-  }
-  ctx.strokeStyle = '#1e3d2b';
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(20,76); ctx.lineTo(canvas.width-20,76); ctx.stroke();
-}
-
-function flashSuccess(text, color){
-  ctx.font = "22px 'Press Start 2P'";
-  ctx.textAlign = 'center';
-  ctx.fillStyle = color;
-  ctx.fillText(text, canvas.width/2, canvas.height/2);
-  ctx.textAlign = 'left';
-}
-
-/* ============================================================
-   GAME 1 — POTENCIAS: enrutamiento de energía
-   Rota las piezas para conectar la fuente con el destino.
-   No requiere conocer la Ley de Ohm: es un puzzle de conectividad,
-   igual que los circuitos que se "cierran" al alinear las piezas.
-   ============================================================ */
-const SHAPES = { straight:[0,2], corner:[0,1] }; // 0=N,1=E,2=S,3=O
-function rotateSet(base, r){ return base.map(d => (d+r)%4); }
-
-const POWER_TEMPLATES = [
-  { source:{col:0,row:0}, target:{col:4,row:1},
-    tiles:[
-      {col:1,row:0,shape:'straight'},
-      {col:2,row:0,shape:'corner'},
-      {col:2,row:1,shape:'corner'},
-      {col:3,row:1,shape:'straight'},
-    ]},
-  { source:{col:0,row:1}, target:{col:4,row:0},
-    tiles:[
-      {col:1,row:1,shape:'straight'},
-      {col:2,row:1,shape:'corner'},
-      {col:2,row:0,shape:'corner'},
-      {col:3,row:0,shape:'straight'},
-    ]},
+const SHAPES={straight:[0,2],corner:[0,1],tee:[0,1,3],cross:[0,1,2,3]};
+const POWER_TEMPLATES=[
+ {source:{c:0,r:1},target:{c:5,r:2},tiles:[
+   {c:1,r:1,s:'straight',sol:1},{c:2,r:1,s:'corner',sol:1},{c:2,r:2,s:'straight',sol:1},{c:3,r:2,s:'corner',sol:2},{c:3,r:3,s:'straight',sol:0},{c:4,r:3,s:'corner',sol:0},{c:4,r:2,s:'straight',sol:1}]},
+ {source:{c:0,r:2},target:{c:5,r:1},tiles:[
+   {c:1,r:2,s:'straight',sol:1},{c:2,r:2,s:'corner',sol:1},{c:2,r:1,s:'straight',sol:1},{c:3,r:1,s:'corner',sol:2},{c:3,r:2,s:'straight',sol:1},{c:4,r:2,s:'corner',sol:3},{c:4,r:1,s:'straight',sol:1}]},
+ {source:{c:0,r:0},target:{c:5,r:3},tiles:[
+   {c:1,r:0,s:'corner',sol:1},{c:1,r:1,s:'straight',sol:0},{c:1,r:2,s:'corner',sol:0},{c:2,r:2,s:'straight',sol:1},{c:3,r:2,s:'corner',sol:1},{c:3,r:3,s:'straight',sol:1},{c:4,r:3,s:'straight',sol:1}]}
 ];
-
-const potencias = {
-  controlsHint: '◀▶ <b>elegir pieza</b> &nbsp; ▲▼ / A <b>rotar</b> &nbsp; B <b>nuevo circuito</b> &nbsp; START <b>menú</b>',
-  cols:5, rows:3, source:null, target:null, tiles:[], selected:0, successTime:0, reached:null,
-  reset(){
-    const tpl = POWER_TEMPLATES[Math.floor(Math.random()*POWER_TEMPLATES.length)];
-    this.source = tpl.source;
-    this.target = tpl.target;
-    this.tiles = tpl.tiles.map(t => ({...t, rotation: Math.floor(Math.random()*4)}));
-    this.selected = 0; this.successTime = 0; this.reached = null;
-  },
-  cellAt(col,row){
-    if(this.source.col===col && this.source.row===row) return {type:'source'};
-    if(this.target.col===col && this.target.row===row) return {type:'target'};
-    const t = this.tiles.find(t => t.col===col && t.row===row);
-    if(t) return {type:'tile', tile:t};
-    return {type:'empty'};
-  },
-  connectionsOf(info){
-    if(info.type==='source') return [1];
-    if(info.type==='target') return [3];
-    if(info.type==='empty')  return [];
-    return rotateSet(SHAPES[info.tile.shape], info.tile.rotation);
-  },
-  computeReach(){
-    const OFFS = {0:[0,-1], 1:[1,0], 2:[0,1], 3:[-1,0]};
-    const OPP  = {0:2, 1:3, 2:0, 3:1};
-    const visited = new Set([this.source.col+','+this.source.row]);
-    const queue = [[this.source.col, this.source.row]];
-    while(queue.length){
-      const [c,r] = queue.shift();
-      const conns = this.connectionsOf(this.cellAt(c,r));
-      conns.forEach(d=>{
-        const [dx,dy] = OFFS[d];
-        const nc=c+dx, nr=r+dy;
-        if(nc<0||nc>=this.cols||nr<0||nr>=this.rows) return;
-        const key = nc+','+nr;
-        if(visited.has(key)) return;
-        const nConns = this.connectionsOf(this.cellAt(nc,nr));
-        if(nConns.includes(OPP[d])){ visited.add(key); queue.push([nc,nr]); }
-      });
-    }
-    return visited;
-  },
-  update(input){
-    if(input.pressed.left)  this.selected = (this.selected + this.tiles.length - 1) % this.tiles.length;
-    if(input.pressed.right) this.selected = (this.selected + 1) % this.tiles.length;
-    const tile = this.tiles[this.selected];
-    if(input.pressed.up || input.pressed.a) tile.rotation = (tile.rotation+1)%4;
-    if(input.pressed.down) tile.rotation = (tile.rotation+3)%4;
-    if(input.pressed.b) this.reset();
-
-    this.reached = this.computeReach();
-    const closed = this.reached.has(this.target.col+','+this.target.row);
-    if(closed) this.successTime += 1/60; else this.successTime = 0;
-    if(this.successTime > 1.4) this.reset();
-  },
-  draw(ctx){
-    drawHeader('MENCIÓN 01 · POTENCIAS Y CIRCUITOS', '#ffcc00', 'Rota las piezas para completar el camino de la electricidad');
-    const cell = 84, gridW = this.cols*cell, gridH = this.rows*cell;
-    const ox = (canvas.width-gridW)/2, oy = 108;
-
-    for(let r=0;r<this.rows;r++){
-      for(let c=0;c<this.cols;c++){
-        const x = ox+c*cell, y = oy+r*cell, cx = x+cell/2, cy = y+cell/2;
-        const info = this.cellAt(c,r);
-        const lit = this.reached && this.reached.has(c+','+r);
-
-        ctx.strokeStyle = '#1e3d2b'; ctx.lineWidth = 2;
-        ctx.strokeRect(x+4, y+4, cell-8, cell-8);
-
-        const conns = this.connectionsOf(info);
-        if(info.type !== 'empty'){
-          const color = lit ? '#6cbf3a' : '#3a5a45';
-          ctx.strokeStyle = color; ctx.lineWidth = lit ? 7 : 5; ctx.lineCap = 'round';
-          conns.forEach(d=>{
-            const ex = d===1 ? x+cell-4 : d===3 ? x+4 : cx;
-            const ey = d===0 ? y+4 : d===2 ? y+cell-4 : cy;
-            ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(ex,ey); ctx.stroke();
-          });
-          ctx.fillStyle = color;
-          ctx.beginPath(); ctx.arc(cx,cy,5,0,Math.PI*2); ctx.fill();
-        }
-
-        if(info.type==='source'){
-          ctx.fillStyle = '#6cbf3a'; ctx.fillRect(cx-15,cy-15,30,30);
-          ctx.fillStyle = '#0a1a10'; ctx.font = "13px 'Press Start 2P'"; ctx.textAlign='center';
-          ctx.fillText('+', cx, cy+5); ctx.textAlign='left';
-        }
-        if(info.type==='target'){
-          ctx.strokeStyle = lit ? '#6cbf3a' : '#ff6b3d'; ctx.lineWidth = 4;
-          ctx.strokeRect(cx-17,cy-17,34,34);
-          ctx.fillStyle = lit ? '#6cbf3a' : '#ff6b3d';
-          ctx.font = "11px 'Press Start 2P'"; ctx.textAlign='center';
-          ctx.fillText('SALIDA', cx, cy+4); ctx.textAlign='left';
-        }
-        if(info.type==='tile' && info.tile===this.tiles[this.selected]){
-          ctx.strokeStyle = '#ffcc00'; ctx.lineWidth = 3;
-          ctx.strokeRect(x+2, y+2, cell-4, cell-4);
-        }
-      }
-    }
-
-    const progress = this.tiles.filter(t => this.reached && this.reached.has(t.col+','+t.row)).length;
-    const boxY = oy+gridH+30;
-    ctx.font = "14px 'Press Start 2P'"; ctx.fillStyle = '#8888aa';
-    ctx.fillText('CONEXIÓN DEL CIRCUITO', ox, boxY);
-    const segW=42, gap=8;
-    for(let i=0;i<this.tiles.length;i++){
-      const sx = ox+i*(segW+gap);
-      ctx.strokeStyle = '#2e5a3e'; ctx.strokeRect(sx, boxY+14, segW, 18);
-      if(i<progress){ ctx.fillStyle = '#6cbf3a'; ctx.fillRect(sx+2, boxY+16, segW-4, 14); }
-    }
-    if(this.reached && this.reached.has(this.target.col+','+this.target.row)){
-      ctx.font = "14px 'Press Start 2P'"; ctx.fillStyle = '#6cbf3a';
-      ctx.fillText('¡CIRCUITO CERRADO!', ox+(segW+gap)*this.tiles.length+24, boxY+27);
-    }
-
-    if(this.successTime>0.05) flashSuccess('¡ENERGÍA ENTREGADA!', '#6cbf3a');
-  }
+const potencias={
+ controlsHint:'D-PAD <b>mover cursor</b> · A <b>rotar pieza</b> · B <b>nuevo circuito</b> · START <b>menú</b>',
+ cols:6,rows:4,source:null,target:null,tiles:[],cursor:{c:0,r:0},successTime:0,
+ reset(){const t=POWER_TEMPLATES[Math.floor(Math.random()*POWER_TEMPLATES.length)];this.source=t.source;this.target=t.target;this.tiles=t.tiles.map(v=>({...v,rot:Math.floor(Math.random()*4)}));this.cursor={c:0,r:0};this.successTime=0;},
+ info(c,r){if(c===this.source.c&&r===this.source.r)return{type:'source'};if(c===this.target.c&&r===this.target.r)return{type:'target'};const t=this.tiles.find(v=>v.c===c&&v.r===r);return t?{type:'tile',tile:t}:{type:'empty'};},
+ conns(info){if(info.type==='source')return[1];if(info.type==='target')return[3];if(info.type==='empty')return[];return SHAPES[info.tile.s].map(d=>(d+info.tile.rot)%4);},
+ reachable(){const off=[[0,-1],[1,0],[0,1],[-1,0]],opp=[2,3,0,1],seen=new Set([this.source.c+','+this.source.r]),q=[[this.source.c,this.source.r]];while(q.length){const [c,r]=q.shift();for(const d of this.conns(this.info(c,r))){const n=[c+off[d][0],r+off[d][1]];if(n[0]<0||n[0]>=this.cols||n[1]<0||n[1]>=this.rows)continue;const k=n[0]+','+n[1];if(seen.has(k))continue;if(this.conns(this.info(n[0],n[1])).includes(opp[d])){seen.add(k);q.push(n);}}}return seen;},
+ update(input){
+   if(input.pressed.left)this.cursor.c=Math.max(0,this.cursor.c-1);
+   if(input.pressed.right)this.cursor.c=Math.min(this.cols-1,this.cursor.c+1);
+   if(input.pressed.up)this.cursor.r=Math.max(0,this.cursor.r-1);
+   if(input.pressed.down)this.cursor.r=Math.min(this.rows-1,this.cursor.r+1);
+   const t=this.tiles.find(v=>v.c===this.cursor.c&&v.r===this.cursor.r);
+   if(input.pressed.a&&t)t.rot=(t.rot+1)%4;
+   if(input.pressed.b)this.reset();
+   const reach=this.reachable();
+   this.successTime=reach.has(this.target.c+','+this.target.r)?this.successTime+1/60:0;
+   if(this.successTime>1.1)this.reset();
+ },
+ draw(){
+   drawHeader('MENCIÓN 01 · POTENCIAS Y CIRCUITOS','#ffcc00','LABORATORIO DE ENERGÍA · conecta la fuente con la carga');
+   const cell=104, ox=168, oy=122; const reach=this.reachable();
+   panel(22,110,122,390,'#6f5c00');text('MISIÓN',35,145,18,'#ffcc00','Press Start 2P');text('Cierra',35,185,22);text('el camino',35,210,22);text('de energía',35,235,22);text('sin dejar',35,275,22);text('cortes.',35,300,22);
+   panel(810,110,168,390,'#6f5c00');text('CONTROLES',825,145,16,'#ffcc00','Press Start 2P');text('D-PAD',825,185,22,'#fff');text('mover',825,208,20);text('A',825,250,22,'#ffcc00','Press Start 2P');text('rotar',860,250,20);text('B',825,292,22,'#ffcc00','Press Start 2P');text('reiniciar',860,292,20);
+   for(let r=0;r<this.rows;r++)for(let c=0;c<this.cols;c++){
+     const x=ox+c*cell,y=oy+r*cell,cx=x+cell/2,cy=y+cell/2,info=this.info(c,r),lit=reach.has(c+','+r);
+     ctx.fillStyle='rgba(8,25,30,.7)';ctx.fillRect(x+4,y+4,cell-8,cell-8);ctx.strokeStyle='#20404a';ctx.strokeRect(x+4,y+4,cell-8,cell-8);
+     const con=this.conns(info);if(info.type!=='empty'){const col=lit?'#62ff7d':'#476b5b';ctx.strokeStyle=col;ctx.lineWidth=lit?9:6;ctx.lineCap='round';for(const d of con){const ex=d===1?x+cell-5:d===3?x+5:cx,ey=d===0?y+5:d===2?y+cell-5:cy;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ex,ey);ctx.stroke();}ctx.fillStyle=col;ctx.beginPath();ctx.arc(cx,cy,7,0,Math.PI*2);ctx.fill();}
+     if(info.type==='source'){ctx.fillStyle='#62ff7d';ctx.fillRect(cx-24,cy-24,48,48);text('+',cx,cy+9,26,'#07140f','Press Start 2P','center');}
+     if(info.type==='target'){ctx.strokeStyle=lit?'#62ff7d':'#ff6b3d';ctx.lineWidth=5;ctx.strokeRect(cx-27,cy-27,54,54);text('LOAD',cx,cy+7,13,lit?'#62ff7d':'#ff6b3d','Press Start 2P','center');}
+     if(c===this.cursor.c&&r===this.cursor.r){ctx.strokeStyle='#ffcc00';ctx.lineWidth=5;ctx.shadowColor='#ffcc00';ctx.shadowBlur=15;ctx.strokeRect(x+1,y+1,cell-2,cell-2);ctx.shadowBlur=0;}
+   }
+   const solved=reach.has(this.target.c+','+this.target.r);text('FUENTE',ox,560,16,'#62ff7d','Press Start 2P');text('CARGA',ox+cell*5,560,16,solved?'#62ff7d':'#ff6b3d','Press Start 2P');
+   if(this.successTime>.05)flashSuccess('¡CIRCUITO CERRADO!','#62ff7d');
+ }
 };
 
 /* ============================================================
-   GAME 2 — TELECOMUNICACIONES: sintonía de señal
+   GAME 2 — TELECOMUNICACIONES
+   Izq/Der = frecuencia. Arriba/Abajo = amplitud.
    ============================================================ */
-const telecom = {
-  controlsHint: '◀▶ <b>elegir freq/amp</b> &nbsp; ▲▼ <b>ajustar</b> &nbsp; B <b>nueva señal</b> &nbsp; START <b>menú</b>',
-  t:0, targetFreq:2, targetAmp:1, userFreq:1, userAmp:1, selected:0, successTime:0,
-  reset(){
-    this.t=0;
-    this.targetFreq = +(1 + Math.random()*4).toFixed(1);
-    this.targetAmp  = +(0.4 + Math.random()*1).toFixed(2);
-    this.userFreq = 1; this.userAmp = 1;
-    this.selected = 0; this.successTime = 0;
-  },
-  update(input){
-    if(input.pressed.left || input.pressed.right) this.selected = 1 - this.selected;
-    if(this.selected===0){
-      if(input.pressed.up)   this.userFreq = Math.min(8, +(this.userFreq+0.1).toFixed(2));
-      if(input.pressed.down) this.userFreq = Math.max(0.2, +(this.userFreq-0.1).toFixed(2));
-    } else {
-      if(input.pressed.up)   this.userAmp = Math.min(2, +(this.userAmp+0.05).toFixed(2));
-      if(input.pressed.down) this.userAmp = Math.max(0.1, +(this.userAmp-0.05).toFixed(2));
-    }
-    if(input.pressed.b) this.reset();
-    this.t += 1/60;
-    const err = Math.abs(this.userFreq-this.targetFreq) + Math.abs(this.userAmp-this.targetAmp);
-    if(err < 0.18) this.successTime += 1/60; else this.successTime = 0;
-    if(this.successTime > 1.4) this.reset();
-  },
-  draw(ctx){
-    drawHeader('MENCIÓN 02 · TELECOMUNICACIONES', '#00e5ff', 'Sintoniza frecuencia y amplitud para igualar la señal');
-    const midY = 260, w = canvas.width-60, x0 = 30;
-
-    ctx.strokeStyle = '#1e3d2b'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(x0, midY); ctx.lineTo(x0+w, midY); ctx.stroke();
-
-    function wave(freq, amp, color, dashed){
-      ctx.beginPath();
-      ctx.setLineDash(dashed ? [6,6] : []);
-      ctx.strokeStyle = color; ctx.lineWidth = 3;
-      for(let px=0; px<=w; px+=3){
-        const xx = x0+px;
-        const yy = midY - Math.sin((px/60)*freq - telecom.t*2) * amp * 70;
-        if(px===0) ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy);
-      }
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-    wave(this.targetFreq, this.targetAmp, '#8888aa', true);
-    wave(this.userFreq, this.userAmp, '#00e5ff', false);
-
-    ctx.font = "16px 'VT323'";
-    ctx.fillStyle = this.selected===0 ? '#00e5ff' : '#e8e8f0';
-    ctx.fillText('FRECUENCIA: ' + this.userFreq.toFixed(1) + ' Hz   (objetivo oculto)', 30, 100);
-    ctx.fillStyle = this.selected===1 ? '#00e5ff' : '#e8e8f0';
-    ctx.fillText('AMPLITUD:   ' + this.userAmp.toFixed(2) + '      (objetivo oculto)', 30, 124);
-
-    ctx.font = "14px 'Press Start 2P'"; ctx.fillStyle = '#555577';
-    ctx.fillText('— — —  señal ruidosa objetivo', 470, 100);
-    ctx.fillStyle = '#00e5ff';
-    ctx.fillText('———  tu señal sintonizada', 470, 122);
-
-    if(this.successTime>0.05) flashSuccess('¡SEÑAL SINTONIZADA!', '#5eff8f');
-  }
+const telecom={
+ controlsHint:'◀▶ <b>frecuencia</b> · ▲▼ <b>amplitud</b> · B <b>nueva señal</b> · START <b>menú</b>',
+ t:0,targetFreq:3,targetAmp:.8,userFreq:1.2,userAmp:.8,successTime:0,
+ reset(){this.t=0;this.targetFreq=+(1.2+Math.random()*4.5).toFixed(1);this.targetAmp=+(0.45+Math.random()*0.9).toFixed(2);this.userFreq=1.2;this.userAmp=.8;this.successTime=0;},
+ update(input){
+   if(input.pressed.left)this.userFreq=Math.max(.5,+(this.userFreq-.1).toFixed(1));
+   if(input.pressed.right)this.userFreq=Math.min(8,+(this.userFreq+.1).toFixed(1));
+   if(input.pressed.down)this.userAmp=Math.max(.2,+(this.userAmp-.05).toFixed(2));
+   if(input.pressed.up)this.userAmp=Math.min(1.7,+(this.userAmp+.05).toFixed(2));
+   if(input.pressed.b)this.reset(); this.t+=1/60;
+   const err=Math.abs(this.userFreq-this.targetFreq)+Math.abs(this.userAmp-this.targetAmp)*1.7;
+   this.successTime=err<.13?this.successTime+1/60:0;if(this.successTime>1.2)this.reset();
+ },
+ draw(){
+   drawHeader('MENCIÓN 02 · TELECOMUNICACIONES','#00e5ff','TORRE DE VIGILANCIA · sincroniza tu señal con la señal objetivo');
+   panel(32,110,190,430,'#0a6570');text('AJUSTE',52,150,18,'#00e5ff','Press Start 2P');text('FRECUENCIA',52,195,19);text(this.userFreq.toFixed(1)+' Hz',52,226,30,'#00e5ff','Press Start 2P');text('◀   ▶',52,260,20,'#e8f0ea','Press Start 2P');text('AMPLITUD',52,315,19);text(this.userAmp.toFixed(2),52,346,30,'#00e5ff','Press Start 2P');text('▲   ▼',52,380,20,'#e8f0ea','Press Start 2P');
+   panel(248,110,720,430,'#0a6570');const x0=275,w=665,mid=325;
+   ctx.strokeStyle='#23444c';ctx.lineWidth=2;for(let i=0;i<8;i++){const y=155+i*48;ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x0+w,y);ctx.stroke();}for(let i=0;i<12;i++){const x=x0+i*60;ctx.beginPath();ctx.moveTo(x,135);ctx.lineTo(x,515);ctx.stroke();}
+   function wave(freq,amp,phase,color,width,dash){ctx.beginPath();ctx.setLineDash(dash?[8,8]:[]);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.shadowColor=color;ctx.shadowBlur=width>3?7:0;for(let px=0;px<=w;px+=3){const xx=x0+px,yy=mid-Math.sin((px/58)*freq-phase)*amp*75;if(px===0)ctx.moveTo(xx,yy);else ctx.lineTo(xx,yy);}ctx.stroke();ctx.setLineDash([]);ctx.shadowBlur=0;}
+   wave(this.targetFreq,this.targetAmp,this.t*1.3,'#64757b',3,true);wave(this.userFreq,this.userAmp,this.t*1.3,'#00e5ff',6,false);
+   text('SEÑAL OBJETIVO',275,495,15,'#9aaeb2','Press Start 2P');text('TU SEÑAL',650,495,15,'#00e5ff','Press Start 2P');
+   const err=Math.abs(this.userFreq-this.targetFreq)+Math.abs(this.userAmp-this.targetAmp)*1.7;const match=Math.max(0,Math.min(1,1-err/2.2));
+   text('MATCH',275,525,15,'#9aaeb2','Press Start 2P');ctx.strokeStyle='#25464b';ctx.strokeRect(350,511,520,18);ctx.fillStyle='#00e5ff';ctx.fillRect(352,513,516*match,14);
+   if(this.successTime>.05)flashSuccess('¡SEÑAL CAPTURADA!','#5eff8f');
+ }
 };
 
 /* ============================================================
-   GAME 3 — COMPUTADORES: adivina la compuerta lógica
+   GAME 3 — COMPUTADORES
+   D-pad = selecciona nodo. A = conmuta entrada o cambia compuerta.
    ============================================================ */
-const GATES = [
-  {name:'AND',  table:[0,0,0,1]},
-  {name:'OR',   table:[0,1,1,1]},
-  {name:'XOR',  table:[0,1,1,0]},
-  {name:'NAND', table:[1,1,1,0]},
-  {name:'NOR',  table:[1,0,0,0]},
-  {name:'XNOR', table:[1,0,0,1]},
-];
-const computadores = {
-  controlsHint: '▲▼ <b>cambiar compuerta</b> &nbsp; B <b>nuevo desafío</b> &nbsp; START <b>menú</b>',
-  guessIndex:0, targetIndex:0, successTime:0,
-  reset(){
-    this.guessIndex = 0;
-    this.targetIndex = Math.floor(Math.random()*GATES.length);
-    this.successTime = 0;
-  },
-  update(input){
-    if(input.pressed.up)   this.guessIndex = (this.guessIndex + GATES.length - 1) % GATES.length;
-    if(input.pressed.down) this.guessIndex = (this.guessIndex + 1) % GATES.length;
-    if(input.pressed.b) this.reset();
-    const match = GATES[this.guessIndex].table.every((v,i)=> v===GATES[this.targetIndex].table[i]);
-    if(match) this.successTime += 1/60; else this.successTime = 0;
-    if(this.successTime > 1.2) this.reset();
-  },
-  draw(ctx){
-    drawHeader('MENCIÓN 03 · COMPUTADORES', '#5eff8f', 'Descubre qué compuerta lógica generó esta tabla de verdad');
-
-    const rows = [[0,0],[0,1],[1,0],[1,1]];
-    const targetTable = GATES[this.targetIndex].table;
-    const guessTable = GATES[this.guessIndex].table;
-
-    // mystery truth table
-    const tx = 60, ty = 130, rowH = 42;
-    ctx.font = "16px 'Press Start 2P'"; ctx.fillStyle='#8888aa';
-    ctx.fillText('COMPUERTA MISTERIOSA', tx, ty-20);
-    ctx.font = "18px 'VT323'";
-    ctx.fillStyle='#e8e8f0';
-    ctx.fillText('A   B   OUT', tx, ty);
-    rows.forEach((r,i)=>{
-      const y = ty + 30 + i*rowH;
-      ctx.fillStyle='#e8e8f0';
-      ctx.fillText(r[0]+'   '+r[1]+'    ' + targetTable[i], tx, y);
-    });
-
-    // guess panel
-    const gx = 470;
-    ctx.font = "16px 'Press Start 2P'"; ctx.fillStyle='#8888aa';
-    ctx.fillText('TU RESPUESTA', gx, ty-20);
-    ctx.font = "30px 'Press Start 2P'";
-    ctx.fillStyle = '#5eff8f';
-    ctx.fillText(GATES[this.guessIndex].name, gx, ty+30);
-
-    ctx.font = "18px 'VT323'"; ctx.fillStyle='#e8e8f0';
-    ctx.fillText('A   B   OUT', gx, ty+66);
-    rows.forEach((r,i)=>{
-      const y = ty + 96 + i*rowH;
-      const ok = guessTable[i] === targetTable[i];
-      ctx.fillStyle = ok ? '#5eff8f' : '#ff6b6b';
-      ctx.fillText(r[0]+'   '+r[1]+'    ' + guessTable[i] + (ok? '  ✓':'  ✗'), gx, y);
-    });
-
-    if(this.successTime>0.05) flashSuccess('¡COMPUERTA CORRECTA: ' + GATES[this.targetIndex].name + '!', '#5eff8f');
-  }
+const computadores={
+ controlsHint:'D-PAD <b>seleccionar nodo</b> · A <b>conmutar</b> · B <b>nuevo desafío</b> · START <b>menú</b>',
+ gateNames:['AND','OR','NOT'],gateIndex:0,a:0,b:0,targetA:1,targetB:1,targetGate:'AND',successTime:0,sel:0,
+ reset(){this.gateIndex=Math.floor(Math.random()*2);this.a=Math.random()>.5?1:0;this.b=Math.random()>.5?1:0;this.targetA=Math.random()>.5?1:0;this.targetB=Math.random()>.5?1:0;this.targetGate=this.gateNames[this.gateIndex];this.successTime=0;this.sel=0;},
+ output(){if(this.targetGate==='AND')return this.a&this.b;if(this.targetGate==='OR')return this.a|this.b;return this.a?0:1;},
+ targetOut(){if(this.targetGate==='AND')return this.targetA&this.targetB;if(this.targetGate==='OR')return this.targetA|this.targetB;return this.targetA?0:1;},
+ update(input){
+   if(input.pressed.left)this.sel=(this.sel+2)%3;if(input.pressed.right)this.sel=(this.sel+1)%3;
+   if(input.pressed.up)this.sel=(this.sel+2)%3;if(input.pressed.down)this.sel=(this.sel+1)%3;
+   if(input.pressed.a){if(this.sel===0)this.a^=1;else if(this.sel===1)this.b^=1;else this.gateIndex=(this.gateIndex+1)%3;}
+   if(input.pressed.b)this.reset();
+   const gate=this.gateNames[this.gateIndex];let out=gate==='AND'?(this.a&this.b):gate==='OR'?(this.a|this.b):(this.a?0:1);
+   const targetGate=this.targetGate, targetOut=this.targetOut();const ok=out===targetOut&&gate===targetGate;
+   this.successTime=ok?this.successTime+1/60:0;if(this.successTime>1.1)this.reset();
+ },
+ draw(){
+   drawHeader('MENCIÓN 03 · COMPUTADORES','#5eff8f','FLUJO DIGITAL · cambia entradas y compuerta para activar la salida');
+   panel(34,112,932,420,'#2e5a3e');
+   const selected=this.sel;
+   // target display
+   panel(60,135,300,150,'#2e5a3e','rgba(20,40,28,.9)');text('DESAFÍO',80,168,18,'#5eff8f','Press Start 2P');text('ACTIVA LA SALIDA',80,205,25);text('con la combinación',80,238,22);text('correcta.',80,266,22);
+   text('TARGET GATE: '+this.targetGate,80,315,17,'#8db49a','Press Start 2P');
+   // circuit
+   const ay=215, by=365, gx=500, outx=810;
+   function node(x,y,label,val,active){ctx.fillStyle=active?'rgba(94,255,143,.12)':'rgba(0,0,0,.25)';ctx.strokeStyle=active?'#5eff8f':'#46604f';ctx.lineWidth=active?4:2;ctx.beginPath();ctx.arc(x,y,52,0,Math.PI*2);ctx.fill();ctx.stroke();text(label,x,y-12,15,active?'#5eff8f':'#9bb1a0','Press Start 2P','center');text(String(val),x,y+28,30,val?'#5eff8f':'#d4dfd7','Press Start 2P','center');}
+   // wires behind nodes
+   ctx.strokeStyle='#365b43';ctx.lineWidth=8;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(180,ay);ctx.lineTo(440,ay);ctx.moveTo(180,by);ctx.lineTo(440,by);ctx.stroke();ctx.beginPath();ctx.moveTo(560,290);ctx.lineTo(outx-45,290);ctx.stroke();
+   if(this.a){ctx.strokeStyle='#5eff8f';ctx.beginPath();ctx.moveTo(180,ay);ctx.lineTo(440,ay);ctx.stroke();}if(this.b){ctx.strokeStyle='#5eff8f';ctx.beginPath();ctx.moveTo(180,by);ctx.lineTo(440,by);ctx.stroke();}
+   node(180,ay,'A',this.a,selected===0);node(180,by,'B',this.b,selected===1);
+   // gate body
+   ctx.fillStyle='rgba(10,25,18,.95)';ctx.strokeStyle=selected===2?'#5eff8f':'#46604f';ctx.lineWidth=selected===2?5:2;ctx.beginPath();ctx.roundRect(440,235,120,110,18);ctx.fill();ctx.stroke();text(this.gateNames[this.gateIndex],500,302,18,'#5eff8f','Press Start 2P','center');
+   // output LED
+   const gate=this.gateNames[this.gateIndex];const out=gate==='AND'?(this.a&this.b):gate==='OR'?(this.a|this.b):(this.a?0:1);pulseCircle(outx,290,35,out?'#5eff8f':'#32483a');text('OUT',outx,350,16,'#b9c9bc','Press Start 2P','center');text(String(out),outx,300,25,out?'#07140f':'#9aa89e','Press Start 2P','center');
+   text('◀ ▲ ▼ ▶',450,390,17,'#9bb1a0','Press Start 2P','center');text('A = cambiar',450,420,19,'#fff','VT323','center');
+   text('NODO SELECCIONADO: '+(selected===0?'ENTRADA A':selected===1?'ENTRADA B':'COMPUERTA'),500,485,17,'#5eff8f','Press Start 2P','center');
+   if(this.successTime>.05)flashSuccess('¡LÓGICA CORRECTA!','#5eff8f');
+ }
 };
 
 /* ============================================================
-   GAME 4 — CONTROL AUTOMÁTICO: péndulo invertido (PID)
+   GAME 4 — CONTROL AUTOMÁTICO
+   Izq/Der = dial correctivo. A = perturbación.
    ============================================================ */
-const control = {
-  controlsHint: '◀▶ <b>elegir P/I/D</b> &nbsp; ▲▼ <b>ajustar</b> &nbsp; A <b>perturbar</b> &nbsp; B <b>reiniciar</b> &nbsp; START <b>menú</b>',
-  x:0, v:0, theta:0.15, omega:0,
-  Kp:20, Ki:0, Kd:10, selected:0,
-  integralError:0, prevError:0, isGameOver:false, status:'', statusColor:'#00d2ff',
-  g:9.81, L:110, dt:0.02,
-  reset(){
-    this.x = 430; this.v = 0;
-    this.theta = (Math.random()>0.5 ? 0.15 : -0.15); this.omega = 0;
-    this.Kp=20; this.Ki=0; this.Kd=10; this.selected=0;
-    this.integralError=0; this.prevError=0; this.isGameOver=false;
-    this.status = 'Reiniciando parámetros...'; this.statusColor = '#e8e8f0';
-  },
-  update(input){
-    if(input.pressed.left || input.pressed.right) this.selected = (this.selected+1)%3;
-    const steps = [5, 0.5, 5];
-    const mins  = [0, 0, 0];
-    const maxs  = [150, 10, 100];
-    let vals = [this.Kp, this.Ki, this.Kd];
-    if(input.pressed.up)   vals[this.selected] = Math.min(maxs[this.selected], +(vals[this.selected]+steps[this.selected]).toFixed(1));
-    if(input.pressed.down) vals[this.selected] = Math.max(mins[this.selected], +(vals[this.selected]-steps[this.selected]).toFixed(1));
-    [this.Kp, this.Ki, this.Kd] = vals;
-    if(input.pressed.a && !this.isGameOver){
-      this.omega += (Math.random()>0.5 ? 2.5 : -2.5);
-      this.status = '¡Perturbación externa aplicada!'; this.statusColor='#00d2ff';
-    }
-    if(input.pressed.b) this.reset();
-    if(this.isGameOver) return;
-
-    const positionError = 430 - this.x;
-    const error = (0 - this.theta) + positionError*0.001;
-    this.integralError += error*this.dt;
-    this.integralError = Math.max(-50, Math.min(50, this.integralError));
-    const derivative = (error - this.prevError)/this.dt;
-    this.prevError = error;
-
-    let force = this.Kp*error + this.Ki*this.integralError + this.Kd*derivative;
-    force = Math.max(-800, Math.min(800, force));
-
-    const accelCart = force*4;
-    const accelTheta = this.g*Math.sin(this.theta) + accelCart*Math.cos(this.theta)*0.01;
-    this.omega += accelTheta*this.dt;
-    this.theta += this.omega*this.dt;
-    this.v += accelCart*this.dt;
-    this.x += this.v*this.dt;
-    this.v *= 0.92; this.omega *= 0.98;
-
-    if(Math.abs(this.theta) > Math.PI/2.2){
-      this.status = '¡El péndulo cayó! Sistema inestable.'; this.statusColor='#ff4c4c'; this.isGameOver=true;
-    } else if(this.x < 470-390 || this.x > 470+390){
-      this.status = '¡El carrito chocó con el riel!'; this.statusColor='#ff4c4c'; this.isGameOver=true;
-    } else if(Math.abs(this.theta) < 0.03 && Math.abs(this.x-430) < 40){
-      this.status = 'Sistema Estable (Steady State)'; this.statusColor='#4cff4c';
-    } else {
-      this.status = 'Compensando errores...'; this.statusColor='#00d2ff';
-    }
-  },
-  draw(ctx){
-    drawHeader('MENCIÓN 04 · CONTROL AUTOMÁTICO', '#ff6b3d', null);
-
-    ctx.font = "18px 'VT323'"; ctx.fillStyle = this.statusColor;
-    ctx.fillText(this.status, 26, 96);
-
-    const labels = ['P','I','D'];
-    const vals = [this.Kp, this.Ki, this.Kd];
-    labels.forEach((l,i)=>{
-      ctx.font = "16px 'Press Start 2P'";
-      ctx.fillStyle = i===this.selected ? '#ff6b3d' : '#8888aa';
-      ctx.fillText(l+': '+vals[i], 26 + i*160, 128);
-    });
-
-    const railY = 340;
-    ctx.strokeStyle = '#555577'; ctx.lineWidth=6; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(40, railY); ctx.lineTo(canvas.width-40, railY); ctx.stroke();
-
-    const cartY = railY-40;
-    ctx.fillStyle = '#ff6b3d';
-    ctx.fillRect(this.x-40, cartY, 80, 30);
-    ctx.fillStyle = '#ccc';
-    ctx.beginPath(); ctx.arc(this.x-20, cartY+30, 8, 0, Math.PI*2); ctx.arc(this.x+20, cartY+30, 8, 0, Math.PI*2); ctx.fill();
-
-    const endX = this.x + this.L*Math.sin(this.theta);
-    const endY = cartY - this.L*Math.cos(this.theta);
-    ctx.strokeStyle = '#ffeb3b'; ctx.lineWidth=8; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(this.x,cartY); ctx.lineTo(endX,endY); ctx.stroke();
-    ctx.fillStyle = '#ff5722';
-    ctx.beginPath(); ctx.arc(endX,endY,16,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#333';
-    ctx.beginPath(); ctx.arc(this.x,cartY,6,0,Math.PI*2); ctx.fill();
-  }
+const control={
+ controlsHint:'◀▶ <b>girar perilla</b> · A <b>perturbar sistema</b> · B <b>reiniciar</b> · START <b>menú</b>',
+ theta:.08,omega:0,x:500,v:0,dial:0,stableTime:0,status:'SISTEMA LISTO',statusColor:'#ff6b3d',disturb:0,
+ reset(){this.theta=(Math.random()>.5?1:-1)*(.08+Math.random()*.05);this.omega=0;this.x=500;this.v=0;this.dial=0;this.stableTime=0;this.status='SISTEMA LISTO';this.statusColor='#ff6b3d';this.disturb=0;},
+ update(input){
+   if(input.pressed.left)this.dial=Math.max(-1,this.dial-.08);if(input.pressed.right)this.dial=Math.min(1,this.dial+.08);
+   if(input.pressed.a){this.omega+=(Math.random()>.5?1:-1)*(.45+.35*Math.random());this.disturb=1;this.status='¡PERTURBACIÓN APLICADA!';this.statusColor='#00e5ff';}
+   if(input.pressed.b)this.reset();
+   // Simple game-friendly dynamic model: dial supplies corrective angular acceleration.
+   const dt=1/60;const controlForce=this.dial*3.6;this.omega += (9.4*Math.sin(this.theta)-controlForce)*dt;this.theta+=this.omega*dt;this.omega*=.985;
+   this.v += (-this.x+500)*.002 + this.dial*.85;this.v*=.88;this.x+=this.v;this.x=Math.max(120,Math.min(880,this.x));this.disturb*=.94;
+   const stable=Math.abs(this.theta)<.045&&Math.abs(this.omega)<.09&&Math.abs(this.x-500)<65;
+   this.stableTime=stable?this.stableTime+dt:0;
+   if(stable){this.status='SISTEMA ESTABLE';this.statusColor='#5eff8f';}else if(Math.abs(this.theta)>1.15||this.x<=120||this.x>=880){this.status='¡SISTEMA INESTABLE!';this.statusColor='#ff4c4c';this.stableTime=0;this.reset();}
+ },
+ draw(){
+   drawHeader('MENCIÓN 04 · CONTROL AUTOMÁTICO','#ff6b3d','PÉNDULO INVERTIDO · encuentra el equilibrio con la acción correctiva');
+   panel(30,112,220,420,'#6b3d2d');text('ACCIÓN',55,150,18,'#ff6b3d','Press Start 2P');
+   // giant dial
+   const dx=140,dy=325,r=78;ctx.save();ctx.translate(dx,dy);ctx.shadowColor=this.statusColor;ctx.shadowBlur=this.statusColor==='#5eff8f'?25:8;ctx.fillStyle='#13231d';ctx.strokeStyle=this.statusColor;ctx.lineWidth=7;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.shadowBlur=0;
+   for(let i=-5;i<=5;i++){const a=(-Math.PI*.75)+(i/10)*(Math.PI*1.5);ctx.strokeStyle=i===0?'#fff':'#46604f';ctx.lineWidth=i===0?5:2;ctx.beginPath();ctx.moveTo(Math.cos(a)*r*.72,Math.sin(a)*r*.72);ctx.lineTo(Math.cos(a)*r*.88,Math.sin(a)*r*.88);ctx.stroke();}
+   const a=(-Math.PI*.75)+((this.dial+1)/2)*(Math.PI*1.5);ctx.strokeStyle='#ffcc00';ctx.lineWidth=8;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(Math.cos(a)*15,Math.sin(a)*15);ctx.lineTo(Math.cos(a)*r*.68,Math.sin(a)*r*.68);ctx.stroke();ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(0,0,12,0,Math.PI*2);ctx.fill();ctx.restore();
+   text('◀      ▶',65,440,18,'#fff','Press Start 2P');text('DIAL '+(this.dial*100).toFixed(0),65,478,16,this.statusColor,'Press Start 2P');
+   panel(275,112,690,420,'#6b3d2d');text(this.status,300,150,18,this.statusColor,'Press Start 2P');
+   const railY=410, left=335,right=905;ctx.strokeStyle='#596c63';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(left,railY);ctx.lineTo(right,railY);ctx.stroke();
+   // center stability zone
+   ctx.fillStyle='rgba(94,255,143,.10)';ctx.fillRect(470,325,120,95);ctx.strokeStyle='#3b7350';ctx.setLineDash([5,5]);ctx.strokeRect(470,325,120,95);ctx.setLineDash([]);
+   // cart
+   const cartY=railY-35;ctx.fillStyle='#ff6b3d';ctx.fillRect(this.x-42,cartY,84,28);ctx.fillStyle='#c8d0ca';ctx.beginPath();ctx.arc(this.x-23,cartY+30,9,0,Math.PI*2);ctx.arc(this.x+23,cartY+30,9,0,Math.PI*2);ctx.fill();
+   // pendulum
+   const L=125,endX=this.x+L*Math.sin(this.theta),endY=cartY-L*Math.cos(this.theta);ctx.strokeStyle='#ffcc55';ctx.lineWidth=10;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(this.x,cartY);ctx.lineTo(endX,endY);ctx.stroke();ctx.fillStyle=this.statusColor;ctx.beginPath();ctx.arc(endX,endY,18,0,Math.PI*2);ctx.fill();
+   text('ZONA ESTABLE',530,360,15,'#5eff8f','Press Start 2P','center');text('A = empujón / ráfaga',610,475,20,'#fff','VT323','center');
+   const stability=Math.max(0,1-Math.min(1,Math.abs(this.theta)/.5));ctx.strokeStyle='#32483a';ctx.strokeRect(310,500,590,15);ctx.fillStyle=this.statusColor;ctx.fillRect(312,502,586*stability,11);
+   text('ESTABILIDAD',310,525,14,'#9bb1a0','Press Start 2P');
+   if(this.status==='SISTEMA ESTABLE')flashSuccess('¡EQUILIBRIO!','#5eff8f');
+ }
 };
 
-const games = { potencias, telecom, computadores, control };
-
-/* ============================================================
-   MAIN LOOP
-   ============================================================ */
+const games={potencias,telecom,computadores,control};
 function mainLoop(){
-  const input = readInput();
-  if(currentScreen === 'menu'){
-    updateMenu(input);
-  } else {
-    if(input.pressed.start){ backToMenu(); }
-    else {
-      games[currentScreen].update(input);
-      games[currentScreen].draw(ctx);
-    }
-  }
+  const input=readInput();
+  if(currentScreen==='menu') updateMenu(input);
+  else if(input.pressed.start) backToMenu();
+  else {games[currentScreen].update(input);games[currentScreen].draw();}
   requestAnimationFrame(mainLoop);
 }
 mainLoop();
