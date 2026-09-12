@@ -526,7 +526,7 @@ function enterGame(id){
     screenMenu.style.display = 'none';
     screenGame.style.display = 'flex';
     controlsLine.innerHTML = games[id].controlsHint +
-      ' &nbsp;·&nbsp; <span class="kb a" data-key="a">A</span>+<span class="kb b" data-key="b">B</span> (mantén) → menú';
+      ' &nbsp;·&nbsp; mantén <span class="kb b" data-key="b">B</span> → menú';
     games[id].reset();
   });
 }
@@ -623,6 +623,14 @@ function drawHeader(title, color, subtitle){
   panel(14,10,832,60,color,'rgba(6,18,13,0.95)',8);
   text(title,32,36,15,color,'Press Start 2P');
   if(subtitle) text(subtitle,32,58,16,'#9fc2ac','VT323');
+}
+/* barra de tiempo compartida: se pone roja cuando queda poco */
+function drawTimerBar(timeLeft, timeMax, y){
+  y = y===undefined?78:y;
+  const pct = Math.max(0, timeLeft/timeMax);
+  panel(14,y,832,16,'#3a5a44','rgba(10,20,15,0.85)',5);
+  ctx.fillStyle = pct>0.3 ? '#5eff8f' : '#ff6b6b';
+  ctx.fillRect(17,y+3, 826*pct, 10);
 }
 function flashSuccess(t,color){
   ctx.save();
@@ -733,16 +741,8 @@ function drawKnob(cx, cy, r, value, target, tol, inZone, selected){
   ctx.restore();
 }
 
-/* firma discreta, casi imperceptible, en la esquina de cada minijuego */
-function drawSignature(){
-  ctx.save();
-  ctx.globalAlpha = 0.36;
-  ctx.font = "13px 'VT323'";
-  ctx.fillStyle = '#dff2e6';
-  ctx.textAlign = 'right';
-  ctx.fillText('VBA', canvas.width-9, canvas.height-7);
-  ctx.restore();
-}
+/* La firma VBA vive solo en la esquina de la ventana (#vba-mark en el HTML);
+   ya no se dibuja también dentro del canvas para no duplicarla. */
 
 /* pequeño temblor de pantalla para reforzar el logro (o el fallo) */
 function triggerShake(){
@@ -756,6 +756,46 @@ function triggerShakeHard(){
   canvas.classList.add('shake-hard');
   clearTimeout(canvas._shakeTimer2);
   canvas._shakeTimer2 = setTimeout(()=> canvas.classList.remove('shake-hard'), 580);
+}
+
+/* ---------- confeti (chaya) al pasar de nivel ---------- */
+let confetti = [];
+const CONFETTI_COLORS = ['#ffcc00','#00e5ff','#5eff8f','#ff6b3d','#ffffff','#c084fc'];
+function spawnConfetti(cx, cy, count){
+  count = count || 70;
+  for(let i=0;i<count;i++){
+    confetti.push({
+      x: cx + (Math.random()-0.5)*60,
+      y: cy + (Math.random()-0.5)*20,
+      vx: (Math.random()-0.5)*300,
+      vy: -Math.random()*300 - 80,
+      w: 5+Math.random()*4, h:8+Math.random()*6,
+      color: CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)],
+      rot: Math.random()*Math.PI*2,
+      vr: (Math.random()-0.5)*12,
+      life: 1.1 + Math.random()*0.7,
+      t:0
+    });
+  }
+}
+function updateAndDrawConfetti(dt){
+  if(confetti.length===0) return;
+  for(let i=confetti.length-1;i>=0;i--){
+    const p = confetti[i];
+    p.t += dt;
+    if(p.t > p.life){ confetti.splice(i,1); continue; }
+    p.vy += 520*dt;
+    p.x += p.vx*dt;
+    p.y += p.vy*dt;
+    p.rot += p.vr*dt;
+    const alpha = Math.max(0, 1 - p.t/p.life);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+    ctx.restore();
+  }
 }
 
 /* datos curiosos breves que aparecen junto al mensaje de éxito */
@@ -789,13 +829,15 @@ function randomFact(id){
   const arr = FACTS[id];
   return arr[Math.floor(Math.random()*arr.length)];
 }
-function drawFact(id, y){
-  ctx.save();
-  ctx.font = "14px 'VT323'";
-  ctx.fillStyle = '#9fc2ac';
-  ctx.textAlign = 'center';
-  ctx.fillText('💡 ¿SABÍAS QUE...? '+randomFactCache[id], canvas.width/2, y);
-  ctx.restore();
+/* El dato curioso ya NO aparece chico y por poco tiempo al ganar:
+   ahora se turna con el texto de instrucciones en la franja superior
+   (siempre visible, letra grande) para que todos alcancen a leerlo
+   sin frenar el ritmo del juego. */
+function tickerText(defaultText, factId){
+  const cyclePeriod = 9000, factWindow = 4200;
+  const t = performance.now() % cyclePeriod;
+  if(t > cyclePeriod - factWindow) return '💡 '+(randomFactCache[factId] || defaultText);
+  return defaultText;
 }
 const randomFactCache = {};
 
@@ -823,10 +865,12 @@ const POWER_LEVELS = [
 ];
 
 const potencias = {
-  level:0, grid:null, cur:{c:1,r:0}, connected:false, successTime:0, cellPx:0, ox:0, oy:0, energyPath:null, pulseT:0, solved:0,
+  level:0, grid:null, cur:{c:1,r:0}, connected:false, successTime:0, timeoutTime:0,
+  timeLeft:0, timeMax:0, cellPx:0, ox:0, oy:0, energyPath:null, pulseT:0,
+  timeForLevel(level){ return Math.max(12, 30 - level*3); },
   reset(){
     this.level = 0;
-    this.solved = 0;
+    randomFactCache.potencias = randomFact('potencias');
     this.setupLevel();
   },
   setupLevel(){
@@ -864,7 +908,10 @@ const potencias = {
     this.cur = {c:1, r:Math.floor(def.rows/2)};
     this.connected = false;
     this.successTime = 0;
+    this.timeoutTime = 0;
     this.pulseT = 0;
+    this.timeMax = this.timeForLevel(this.level);
+    this.timeLeft = this.timeMax;
   },
   isFixed(c,r){
     return (c===this.def.source.c && r===this.def.source.r) || (c===this.def.target.c && r===this.def.target.r);
@@ -925,9 +972,14 @@ const potencias = {
     if(this.successTime>0){
       this.successTime -= 1/60;
       if(this.successTime<=0){
-        this.level = (this.level+1) % POWER_LEVELS.length;
+        this.level = this.level+1;
         this.setupLevel();
       }
+      return;
+    }
+    if(this.timeoutTime>0){
+      this.timeoutTime -= 1/60;
+      if(this.timeoutTime<=0) this.setupLevel();
       return;
     }
     if(input.rep.up) this.moveCursor(0,-1);
@@ -946,9 +998,13 @@ const potencias = {
     }
     this.connected = this.checkConnectivity();
     if(this.connected){
-      this.successTime = 2.1; this.pulseT = 0; this.solved++;
+      this.successTime = 2.1; this.pulseT = 0;
       randomFactCache.potencias = randomFact('potencias');
       sfxSuccess(); triggerShake();
+      spawnConfetti(canvas.width/2, 140);
+    } else {
+      this.timeLeft -= 1/60;
+      if(this.timeLeft<=0){ this.timeoutTime = 1.3; sfxFail(); triggerShake(); }
     }
   },
   drawCell(cx,cy,size,conns,color,glow){
@@ -971,10 +1027,10 @@ const potencias = {
   draw(){
     bg();
     drawHeader('MENCIÓN 01 · POTENCIAS Y CIRCUITOS · NIVEL '+(this.level+1),'#ffcc00',
-      'Conecta la energía desde el generador ⚡ hasta la carga 💡');
-    text('RESUELTOS '+this.solved, 828, 36, 12, '#ffcc00', 'Press Start 2P', 'right');
+      tickerText('Conecta la energía desde el generador ⚡ hasta la carga 💡', 'potencias'));
+    drawTimerBar(this.timeLeft, this.timeMax);
     const def = this.def;
-    const areaX=40, areaY=90, areaW=780, areaH=300;
+    const areaX=40, areaY=100, areaW=780, areaH=290;
     const size = Math.min(areaW/def.cols, areaH/def.rows);
     const gw = size*def.cols, gh=size*def.rows;
     const ox = areaX + (areaW-gw)/2, oy = areaY + (areaH-gh)/2;
@@ -1043,9 +1099,13 @@ const potencias = {
 
     if(this.successTime>0.05){
       flashSuccess('¡ENERGÍA ENTREGADA!', '#5eff8f');
-      drawFact('potencias', canvas.height/2 + 34);
     }
-    drawSignature();
+    if(this.timeoutTime>0.05){
+      flashSuccess('¡SE ACABÓ EL TIEMPO!', '#ff6b6b');
+      ctx.save(); ctx.font="16px 'VT323'"; ctx.fillStyle='#ffcfcf'; ctx.textAlign='center';
+      ctx.fillText('Vuelve a intentarlo', canvas.width/2, canvas.height/2+30);
+      ctx.restore();
+    }
   }
 };
 
@@ -1054,21 +1114,31 @@ const potencias = {
    ◀▶ ajustan la frecuencia · ▲▼ ajustan la amplitud
    ============================================================ */
 const telecom = {
-  freq:2, amp:0.5, targetFreq:3, targetAmp:0.7, successTime:0, matched:false, matches:0,
+  level:0, freq:2, amp:0.5, targetFreq:3, targetAmp:0.7, successTime:0, timeoutTime:0,
+  timeLeft:0, timeMax:0, matched:false,
+  timeForLevel(level){ return Math.max(9, 24 - level*2); },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> frecuencia &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> amplitud &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> nueva señal',
   reset(){
-    this.freq = 2; this.amp = 0.5; this.matches = 0;
+    this.level = 0; this.freq = 2; this.amp = 0.5;
+    randomFactCache.telecom = randomFact('telecom');
     this.newTarget();
   },
   newTarget(){
     this.targetFreq = 1 + Math.floor(Math.random()*6)*0.5;
     this.targetAmp = 0.25 + Math.floor(Math.random()*8)*0.09;
-    this.matched = false; this.successTime = 0;
+    this.matched = false; this.successTime = 0; this.timeoutTime = 0;
+    this.timeMax = this.timeForLevel(this.level);
+    this.timeLeft = this.timeMax;
   },
   update(input){
     if(this.successTime>0){
       this.successTime -= 1/60;
-      if(this.successTime<=0) this.newTarget();
+      if(this.successTime<=0){ this.level = this.level+1; this.newTarget(); }
+      return;
+    }
+    if(this.timeoutTime>0){
+      this.timeoutTime -= 1/60;
+      if(this.timeoutTime<=0) this.newTarget();
       return;
     }
     if(input.rep.right) this.freq = Math.min(6, +(this.freq+0.5).toFixed(2));
@@ -1079,18 +1149,23 @@ const telecom = {
 
     const closeFreq = Math.abs(this.freq-this.targetFreq) < 0.26;
     const closeAmp  = Math.abs(this.amp-this.targetAmp) < 0.07;
-    if(closeFreq && closeAmp && this.successTime<=0){
-      this.matched=true; this.successTime = 1.4; this.matches=(this.matches||0)+1;
+    if(closeFreq && closeAmp){
+      this.matched=true; this.successTime = 1.4;
       sfxSuccess(); triggerShake(); randomFactCache.telecom = randomFact('telecom');
+      spawnConfetti(canvas.width/2, 150);
+    } else {
+      this.timeLeft -= 1/60;
+      if(this.timeLeft<=0){ this.timeoutTime = 1.3; sfxFail(); triggerShake(); }
     }
   },
   draw(){
     bg();
-    drawHeader('MENCIÓN 02 · TELECOMUNICACIONES','#00e5ff','Sintoniza tu señal (cian) hasta calzar con la señal objetivo (gris)');
-    text('SEÑALES CAPTURADAS: '+this.matches, 818, 36, 13, '#7ea8ad','Press Start 2P','right');
+    drawHeader('MENCIÓN 02 · TELECOMUNICACIONES · NIVEL '+(this.level+1),'#00e5ff',
+      tickerText('Sintoniza tu señal (cian) hasta calzar con la señal objetivo (gris)', 'telecom'));
+    drawTimerBar(this.timeLeft, this.timeMax);
 
-    panel(40,90,780,240,'#1b4a55','rgba(6,20,24,0.7)',10);
-    const x0=60, x1=800, midY=210, W=x1-x0;
+    panel(40,100,780,230,'#1b4a55','rgba(6,20,24,0.7)',10);
+    const x0=60, x1=800, midY=215, W=x1-x0;
     ctx.save();
     ctx.beginPath(); ctx.moveTo(x0,midY); ctx.lineTo(x1,midY);
     ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.lineWidth=1; ctx.stroke();
@@ -1121,9 +1196,13 @@ const telecom = {
 
     if(this.successTime>0.05){
       flashSuccess('¡SEÑAL CAPTURADA!', '#5eff8f');
-      drawFact('telecom', 268);
     }
-    drawSignature();
+    if(this.timeoutTime>0.05){
+      flashSuccess('¡SE ACABÓ EL TIEMPO!', '#ff6b6b');
+      ctx.save(); ctx.font="16px 'VT323'"; ctx.fillStyle='#ffcfcf'; ctx.textAlign='center';
+      ctx.fillText('Nueva señal en camino...', canvas.width/2, 268);
+      ctx.restore();
+    }
   }
 };
 
@@ -1131,11 +1210,8 @@ const telecom = {
    GAME 3 — COMPUTADORES
    Compuertas lógicas: observa el ejemplo animado y completa
    la tabla de verdad. ▲▼ elige fila · A alterna 0/1 · B revisa
-   Tras 3 aciertos se desbloquea, a veces, una versión con 3
-   entradas (modo difícil) para seguir subiendo el desafío.
    ============================================================ */
 const GATES2 = ['AND','OR','XOR','NAND','NOR','XNOR'];
-const GATES3 = ['AND','OR','NAND','NOR'];
 function gateTruthN(g,bits){
   const any = bits.some(b=>b), all = bits.every(b=>b);
   const parity = bits.reduce((s,b)=>s+b,0)%2;
@@ -1150,32 +1226,36 @@ function gateTruthN(g,bits){
   return 0;
 }
 const computadores = {
-  gate:'AND', inputs:2, guess:[0,0,0,0], correct:null, cursor:0, checked:false, ok:false,
-  successTime:0, demoIdx:0, demoTimer:0, feedback:'', solved:0,
+  level:0, inputs:2, gate:'AND', guess:[0,0,0,0], correct:null, cursor:0, checked:false, ok:false,
+  successTime:0, timeoutTime:0, timeLeft:0, timeMax:0, demoIdx:0, demoTimer:0, feedback:'',
+  timeForLevel(level){ return Math.max(14, 34 - level*3); },
   controlsHint:'<span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> elegir fila &nbsp;·&nbsp; <span class="kb a" data-key="a">A</span> cambia 0/1 &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> revisar',
   rows:[[0,0],[0,1],[1,0],[1,1]],
-  reset(){ this.solved = 0; this.newGate(); },
+  reset(){ this.level = 0; randomFactCache.computadores = randomFact('computadores'); this.newGate(); },
   newGate(){
-    const canHard = this.solved >= 3;
-    const hard = canHard && Math.random() < 0.5;
-    this.inputs = hard ? 3 : 2;
-    const list = hard ? GATES3 : GATES2;
-    this.gate = list[Math.floor(Math.random()*list.length)];
+    this.gate = GATES2[Math.floor(Math.random()*GATES2.length)];
     this.rows = [];
-    for(let m=0; m<(1<<this.inputs); m++){
+    for(let m=0; m<4; m++){
       const bits=[];
-      for(let b=this.inputs-1; b>=0; b--) bits.push((m>>b)&1);
+      for(let b=1; b>=0; b--) bits.push((m>>b)&1);
       this.rows.push(bits);
     }
     this.guess = this.rows.map(()=>0);
     this.correct = this.rows.map(bits => gateTruthN(this.gate, bits));
-    this.cursor = 0; this.checked=false; this.ok=false; this.successTime=0; this.demoIdx=0;
-    this.feedback = hard ? '¡MODO DIFÍCIL! 3 ENTRADAS' : 'COMPLETA LA TABLA Y PULSA B';
+    this.cursor = 0; this.checked=false; this.ok=false; this.successTime=0; this.timeoutTime=0; this.demoIdx=0;
+    this.feedback = 'COMPLETA LA TABLA Y PULSA B';
+    this.timeMax = this.timeForLevel(this.level);
+    this.timeLeft = this.timeMax;
   },
   update(input){
     if(this.successTime>0){
       this.successTime -= 1/60;
-      if(this.successTime<=0) this.newGate();
+      if(this.successTime<=0){ this.level = this.level+1; this.newGate(); }
+      return;
+    }
+    if(this.timeoutTime>0){
+      this.timeoutTime -= 1/60;
+      if(this.timeoutTime<=0) this.newGate();
       return;
     }
     this.demoTimer += 1/60;
@@ -1192,10 +1272,14 @@ const computadores = {
       this.checked = true;
       this.ok = this.guess.every((v,i)=>v===this.correct[i]);
       if(this.ok){
-        this.feedback='¡TABLA CORRECTA!'; this.successTime=1.4; this.solved++;
+        this.feedback='¡TABLA CORRECTA!'; this.successTime=1.4;
         randomFactCache.computadores = randomFact('computadores');
         sfxSuccess(); triggerShake();
+        spawnConfetti(canvas.width/2, 150);
       } else { this.feedback = 'REVISA LAS FILAS EN ROJO'; sfxFail(); }
+    } else if(!this.checked){
+      this.timeLeft -= 1/60;
+      if(this.timeLeft<=0){ this.timeoutTime = 1.3; sfxFail(); triggerShake(); }
     }
   },
   drawGateSymbol(x,y,w,h,g,nIn){
@@ -1219,7 +1303,7 @@ const computadores = {
     if(g==='NAND'||g==='NOR'||g==='XNOR'){
       ctx.beginPath(); ctx.arc(x+w+8,y+h/2,6,0,Math.PI*2); ctx.stroke();
     }
-    // input stubs (2 o 3 según la compuerta)
+    // input stubs
     ctx.beginPath();
     for(let k=0;k<nIn;k++){
       const fy = y + h*((k+1)/(nIn+1));
@@ -1232,7 +1316,7 @@ const computadores = {
   },
   drawSwitchLamp(x,y,bits,out){
     const n = bits.length;
-    const spacing = n>2 ? 34 : 46;
+    const spacing = 46;
     for(let i=0;i<n;i++){
       const sx=x, sy=y+i*spacing;
       text(String.fromCharCode(65+i), sx-26, sy+5, 16, '#9fc2ac');
@@ -1256,40 +1340,40 @@ const computadores = {
   },
   draw(){
     bg();
-    drawHeader('MENCIÓN 03 · COMPUTADORES','#5eff8f','Mira el ejemplo y luego completa la tabla de verdad');
-    text('RESUELTAS '+this.solved, 828, 36, 12, '#5eff8f', 'Press Start 2P', 'right');
+    drawHeader('MENCIÓN 03 · COMPUTADORES · NIVEL '+(this.level+1),'#5eff8f',
+      tickerText('Mira el ejemplo y luego completa la tabla de verdad', 'computadores'));
+    drawTimerBar(this.timeLeft, this.timeMax);
 
     // left: gate symbol + animated switch/lamp demo
-    panel(40,90,360,300,'#31553e','rgba(6,21,15,0.9)',10);
-    text('COMPUERTA: '+this.gate+(this.inputs===3?' (3 ENTRADAS)':''), 60,120,15,'#5eff8f','Press Start 2P');
-    this.drawGateSymbol(90,150,90,60,this.gate,this.inputs);
+    panel(40,100,360,290,'#31553e','rgba(6,21,15,0.9)',10);
+    text('COMPUERTA: '+this.gate, 60,128,15,'#5eff8f','Press Start 2P');
+    this.drawGateSymbol(90,156,90,60,this.gate,2);
 
     const dbits = this.rows[this.demoIdx];
     const dout = gateTruthN(this.gate, dbits);
-    text('EJEMPLO EN VIVO',60,260,13,'#9fc2ac','Press Start 2P');
-    this.drawSwitchLamp(90,285,dbits,dout);
+    text('EJEMPLO EN VIVO',60,264,13,'#9fc2ac','Press Start 2P');
+    this.drawSwitchLamp(90,288,dbits,dout);
     text(dbits.map((b,i)=>String.fromCharCode(65+i)+'='+b).join('  ')+'  →  SALIDA='+dout, 60,375,16,'#dff2e6');
 
-    // right: fill-in truth table (columnas dinámicas según nº de entradas)
-    panel(420,90,400,300,'#31553e','rgba(6,21,15,0.9)',10);
-    text('TABLA DE VERDAD — TU TURNO',440,120,13,'#5eff8f','Press Start 2P');
-    const headers = [...Array(this.inputs)].map((_,i)=>String.fromCharCode(65+i)).concat('SALIDA');
+    // right: fill-in truth table
+    panel(420,100,400,290,'#31553e','rgba(6,21,15,0.9)',10);
+    text('TABLA DE VERDAD — TU TURNO',440,128,13,'#5eff8f','Press Start 2P');
+    const headers = ['A','B','SALIDA'];
     const colX = i => 458 + i*(320/(headers.length-1));
-    headers.forEach((h,i)=> text(h, colX(i), 147, 14,'#9fc2ac','Press Start 2P','center'));
+    headers.forEach((h,i)=> text(h, colX(i), 154, 14,'#9fc2ac','Press Start 2P','center'));
 
-    const top=168, bottom=380, n=this.rows.length;
+    const top=175, bottom=380, n=this.rows.length;
     const rowH = (bottom-top)/n;
-    const fsz = rowH<28 ? 13 : 19;
     for(let i=0;i<n;i++){
       const yy = top + i*rowH + rowH*0.66;
       const sel = i===this.cursor;
       if(sel){ ctx.save(); ctx.fillStyle='rgba(94,255,143,0.10)'; ctx.fillRect(432,yy-rowH*0.62,376,rowH); ctx.restore(); }
-      this.rows[i].forEach((v,ci)=> text(String(v), colX(ci), yy, fsz, '#dff2e6','Press Start 2P','center'));
+      this.rows[i].forEach((v,ci)=> text(String(v), colX(ci), yy, 19, '#dff2e6','Press Start 2P','center'));
       let outColor = '#dff2e6';
       if(this.checked) outColor = (this.guess[i]===this.correct[i]) ? '#5eff8f' : '#ff6b6b';
       else if(sel) outColor = '#ffe98a';
       const outCx = colX(headers.length-1);
-      text(String(this.guess[i]), outCx, yy, fsz, outColor,'Press Start 2P','center');
+      text(String(this.guess[i]), outCx, yy, 19, outColor,'Press Start 2P','center');
       if(sel){
         ctx.save(); ctx.strokeStyle='#fff'; ctx.lineWidth=2;
         ctx.strokeRect(outCx-30, yy-rowH*0.62, 60, rowH*0.9);
@@ -1297,10 +1381,14 @@ const computadores = {
       }
     }
     text(this.feedback, 620, 415, 15, this.ok?'#5eff8f':'#ffcc55','Press Start 2P','center');
-    if(this.ok && this.successTime>0.05) drawFact('computadores', 432);
 
     if(this.successTime>0.05) flashSuccess('¡LÓGICA VALIDADA!', '#5eff8f');
-    drawSignature();
+    if(this.timeoutTime>0.05){
+      flashSuccess('¡SE ACABÓ EL TIEMPO!', '#ff6b6b');
+      ctx.save(); ctx.font="16px 'VT323'"; ctx.fillStyle='#ffcfcf'; ctx.textAlign='center';
+      ctx.fillText('Nueva compuerta en camino...', canvas.width/2, canvas.height/2+30);
+      ctx.restore();
+    }
   }
 };
 
@@ -1311,9 +1399,10 @@ const computadores = {
    el tiempo.
    ============================================================ */
 const control = {
-  dials:null, sel:0, timeLeft:10, round:1, tol:12, inZoneTime:0,
+  dials:null, sel:0, timeLeft:10, timeMax:13, round:1, tol:12, inZoneTime:0,
   state:'play', // 'play' | 'success' | 'fail'
   stateTime:0, holdTime:0, lastDir:null,
+  timeForRound(round){ return Math.max(7, 13 - (round-1)*0.8); },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> elegir perilla &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> ajustar (mantén presionado para ir más rápido)',
   info:{
     Kp:'Reacciona según qué tan grande es el error AHORA MISMO.',
@@ -1322,6 +1411,7 @@ const control = {
   },
   reset(){
     this.round = 1; this.tol = 16;
+    randomFactCache.control = randomFact('control');
     this.newRound();
   },
   newRound(){
@@ -1330,7 +1420,9 @@ const control = {
       {name:'Ki', value:50, target: 15+Math.random()*70},
       {name:'Kd', value:50, target: 15+Math.random()*70},
     ];
-    this.sel = 0; this.timeLeft = 13; this.inZoneTime = 0;
+    this.sel = 0; this.inZoneTime = 0;
+    this.timeMax = this.timeForRound(this.round);
+    this.timeLeft = this.timeMax;
     this.state='play'; this.stateTime=0;
   },
   update(input){
@@ -1368,19 +1460,15 @@ const control = {
       this.state='success'; this.stateTime=1.6;
       randomFactCache.control = randomFact('control');
       sfxSuccess(); triggerShake();
+      spawnConfetti(canvas.width/2, 150);
     }
     else if(this.timeLeft <= 0){ this.state='fail'; this.stateTime=1.8; sfxFail(); triggerShakeHard(); }
   },
   draw(){
     bg();
-    drawHeader('MENCIÓN 04 · CONTROL AUTOMÁTICO · RONDA '+this.round,'#ff6b3d',
-      'Lleva las 3 perillas a la zona VERDE antes que se acabe el tiempo');
-
-    // timer bar
-    const tpct = Math.max(0,this.timeLeft/13);
-    panel(40,90,780,20,'#6b3d2d','rgba(20,14,10,0.8)',6);
-    ctx.fillStyle = tpct>0.3? '#5eff8f':'#ff6b6b';
-    ctx.fillRect(43,93, 774*tpct, 14);
+    drawHeader('MENCIÓN 04 · CONTROL AUTOMÁTICO · NIVEL '+this.round,'#ff6b3d',
+      tickerText('Lleva las 3 perillas a la zona VERDE antes que se acabe el tiempo', 'control'));
+    drawTimerBar(this.timeLeft, this.timeMax);
 
     // pendulum
     const err = this.dials.reduce((s,d)=> s + (d.value-d.target), 0) / this.dials.length;
@@ -1416,29 +1504,29 @@ const control = {
     text(selDial.name+':', 58,400,15,'#ffcc55','Press Start 2P');
     wrapText(this.info[selDial.name], 58,424, 740, 20, 16, '#dff2e6');
 
-    if(this.state==='success'){ flashSuccess('¡PÉNDULO ESTABILIZADO!', '#5eff8f'); drawFact('control', 300); }
+    if(this.state==='success') flashSuccess('¡PÉNDULO ESTABILIZADO!', '#5eff8f');
     else if(this.state==='fail') flashSuccess('¡SE CAYÓ EL PÉNDULO!', '#ff6b6b');
-    drawSignature();
   }
 };
 
 const games = {potencias, telecom, computadores, control};
 
-/* ---------- salir al menú manteniendo A+B ----------
-   El Makey Makey no tiene un botón "Start" propio (solo las 6 frutas:
-   4 flechas + A + B), así que además de Enter/Escape del teclado se
-   habilita mantener A+B presionados juntos ~1.1s para volver al menú
-   sin depender del teclado. Se muestra un anillo de carga para que el
-   niño entienda por qué "algo está pasando" mientras los sostiene. */
-const EXIT_HOLD_MS = 1100;
+/* ---------- salir al menú manteniendo B ----------
+   El Makey Makey no tiene un botón "Start" propio (solo 6 frutas:
+   4 flechas + A + B). Pedir dos frutas a la vez (A+B) resultaba
+   incómodo de sostener a la vez jugando con las manos ocupadas, así
+   que ahora basta con mantener SOLO LA FRUTA B presionada ~1.6s para
+   volver al menú (además de Enter/Escape del teclado para el
+   operador). Un anillo de carga muestra el progreso. */
+const EXIT_HOLD_MS = 1600;
 let exitHoldMs = 0;
 const exitRingEl = document.getElementById('exitRing');
 
 function updateExitCombo(input, dtMs){
   if(currentScreen==='menu'){ exitHoldMs = 0; exitRingEl.style.display='none'; return; }
-  if(input.held.a && input.held.b){
+  if(input.held.b){
     exitHoldMs += dtMs;
-    if(exitHoldMs > 150){
+    if(exitHoldMs > 250){
       exitRingEl.style.display = 'flex';
       exitRingEl.style.setProperty('--p', Math.min(100, (exitHoldMs/EXIT_HOLD_MS)*100));
     }
@@ -1467,6 +1555,7 @@ function mainLoop(){
     } else if(currentScreen!=='menu'){
       games[currentScreen].update(input);
       games[currentScreen].draw();
+      updateAndDrawConfetti(FRAME_MS/1000);
     }
   }
   requestAnimationFrame(mainLoop);
