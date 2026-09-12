@@ -161,6 +161,12 @@
     padding:8px 16px; margin:0;
   }
   #controls-line b{ color:#fff; }
+
+  #vba-mark{
+    position:fixed; right:10px; bottom:6px; z-index:5;
+    font-family:'VT323',monospace; font-size:12px; color:#dff2e6;
+    opacity:0.22; pointer-events:none; user-select:none;
+  }
 </style>
 </head>
 <body>
@@ -169,6 +175,7 @@
 <div id="vignette"></div>
 <div id="gp-status">🎮 Control no detectado — presiona un botón</div>
 <div id="exitRing" style="--p:0"></div>
+<div id="vba-mark">VBA</div>
 
 <!-- ===================== MENU ===================== -->
 <div id="screen-menu">
@@ -539,6 +546,72 @@ function drawButtonGlyph(x,y,r,label,color,dim){
   ctx.restore();
 }
 
+/* ---------- perilla giratoria (potenciómetro) ----------
+   value/target/tol van de 0 a 100. El barrido va de -135° a
+   +135° (270°), como un potenciómetro físico real, dejando
+   un hueco abajo. */
+function knobAngle(v){ return (-135 + (v/100)*270 - 90) * Math.PI/180; }
+function drawKnob(cx, cy, r, value, target, tol, inZone, selected){
+  const a0 = knobAngle(0), a1 = knobAngle(100);
+  // pista de fondo (rango completo)
+  ctx.save();
+  ctx.lineWidth = 5; ctx.lineCap='round';
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.beginPath(); ctx.arc(cx,cy,r+9, a0, a1); ctx.stroke();
+  // zona verde objetivo
+  ctx.strokeStyle = 'rgba(94,255,143,0.65)';
+  ctx.beginPath();
+  ctx.arc(cx,cy,r+9, knobAngle(Math.max(0,target-tol)), knobAngle(Math.min(100,target+tol)));
+  ctx.stroke();
+  ctx.restore();
+
+  // cuerpo de la perilla (metálico)
+  ctx.save();
+  const grad = ctx.createRadialGradient(cx-r*0.35,cy-r*0.35,r*0.15, cx,cy,r);
+  grad.addColorStop(0, '#4a4a44');
+  grad.addColorStop(1, '#1c1c18');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+  ctx.lineWidth = selected? 3:2;
+  ctx.strokeStyle = selected? '#fff' : '#0a0a08';
+  ctx.stroke();
+  // muescas de referencia
+  ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=2;
+  for(let i=0;i<=4;i++){
+    const ang = knobAngle(i*25);
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(ang)*(r-3), cy+Math.sin(ang)*(r-3));
+    ctx.lineTo(cx+Math.cos(ang)*(r-8), cy+Math.sin(ang)*(r-8));
+    ctx.stroke();
+  }
+  // indicador (puntero) de la perilla
+  const ang = knobAngle(value);
+  const pColor = inZone? '#5eff8f' : '#ffcc55';
+  ctx.save();
+  ctx.shadowColor = pColor; ctx.shadowBlur = selected? 10:4;
+  ctx.strokeStyle = pColor; ctx.lineWidth = 4; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(cx + Math.cos(ang)*r*0.25, cy + Math.sin(ang)*r*0.25);
+  ctx.lineTo(cx + Math.cos(ang)*r*0.82, cy + Math.sin(ang)*r*0.82);
+  ctx.stroke();
+  ctx.restore();
+  // tapa central
+  ctx.fillStyle = '#2a2a24';
+  ctx.beginPath(); ctx.arc(cx,cy,r*0.22,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+/* firma discreta, casi imperceptible, en la esquina de cada minijuego */
+function drawSignature(){
+  ctx.save();
+  ctx.globalAlpha = 0.28;
+  ctx.font = "9px 'VT323'";
+  ctx.fillStyle = '#dff2e6';
+  ctx.textAlign = 'right';
+  ctx.fillText('VBA', canvas.width-8, canvas.height-6);
+  ctx.restore();
+}
+
 /* ============================================================
    GAME 1 — POTENCIAS Y CIRCUITOS
    Enrutamiento de energía: mueve el cursor con las flechas,
@@ -756,6 +829,7 @@ const potencias = {
     }
 
     if(this.successTime>0.05) flashSuccess('¡ENERGÍA ENTREGADA!', '#5eff8f');
+    drawSignature();
   }
 };
 
@@ -826,6 +900,7 @@ const telecom = {
     text((this.amp*100).toFixed(0)+' %',450,398,22,'#00e5ff','Press Start 2P');
 
     if(this.successTime>0.05) flashSuccess('¡SEÑAL CAPTURADA!', '#5eff8f');
+    drawSignature();
   }
 };
 
@@ -974,6 +1049,7 @@ const computadores = {
     text(this.feedback, 620, 415, 15, this.ok?'#5eff8f':'#ffcc55','Press Start 2P','center');
 
     if(this.successTime>0.05) flashSuccess('¡LÓGICA VALIDADA!', '#5eff8f');
+    drawSignature();
   }
 };
 
@@ -1067,34 +1143,27 @@ const control = {
     ctx.save(); ctx.shadowColor=poleColor; ctx.shadowBlur=16;
     ctx.fillStyle=poleColor; ctx.beginPath(); ctx.arc(endX,endY,13,0,Math.PI*2); ctx.fill(); ctx.restore();
 
-    // dials — Kp / Ki / Kd, al estilo de un controlador PID real
+    // perillas — Kp / Ki / Kd, dibujadas como potenciómetros giratorios reales
     const gap=22, dw = (780 - gap*2)/3;
     this.dials.forEach((d,i)=>{
-      const dx = 40 + i*(dw+gap), dy=262;
+      const dx = 40 + i*(dw+gap), dy=262, ph=112;
       const sel = i===this.sel;
-      panel(dx,dy,dw,78, sel?'#fff':'#6b3d2d', 'rgba(10,10,8,0.75)', 8);
-      text(d.name, dx+14, dy+24, 15, sel?'#fff':'#e3b8a0','Press Start 2P');
-      const barX=dx+14, barY=dy+36, barW=dw-28, barH=20;
-      ctx.strokeStyle='#8a5a44'; ctx.strokeRect(barX,barY,barW,barH);
+      panel(dx,dy,dw,ph, sel?'#fff':'#6b3d2d', 'rgba(10,10,8,0.75)', 8);
+      text(d.name, dx+dw/2, dy+20, 15, sel?'#fff':'#e3b8a0','Press Start 2P','center');
       const inZone = Math.abs(d.value-d.target)<=this.tol;
-      ctx.fillStyle = inZone? 'rgba(94,255,143,0.35)' : 'rgba(255,107,107,0.18)';
-      const zoneX = barX + ((d.target-this.tol)/100)*barW;
-      const zoneW = (this.tol*2/100)*barW;
-      ctx.fillRect(zoneX,barY,zoneW,barH);
-      const vx = barX + (d.value/100)*barW;
-      ctx.fillStyle = inZone? '#5eff8f':'#ffcc55';
-      ctx.fillRect(vx-3,barY-4,6,barH+8);
-      text(Math.round(d.value)+'', dx+14, dy+70, 14, '#dff2e6');
+      drawKnob(dx+dw/2, dy+66, 34, d.value, d.target, this.tol, inZone, sel);
+      text(Math.round(d.value)+'', dx+dw/2, dy+106, 15, inZone?'#5eff8f':'#ffcc55','Press Start 2P','center');
     });
 
     // texto educativo de la perilla seleccionada (sin fórmulas, solo intuición)
     const selDial = this.dials[this.sel];
-    panel(40,346,780,58,'#6b3d2d','rgba(10,10,8,0.7)',8);
-    text(selDial.name+':', 58,368,15,'#ffcc55','Press Start 2P');
-    wrapText(this.info[selDial.name], 58,392, 740, 20, 17, '#dff2e6');
+    panel(40,380,780,52,'#6b3d2d','rgba(10,10,8,0.7)',8);
+    text(selDial.name+':', 58,400,15,'#ffcc55','Press Start 2P');
+    wrapText(this.info[selDial.name], 58,424, 740, 20, 16, '#dff2e6');
 
     if(this.state==='success') flashSuccess('¡PÉNDULO ESTABILIZADO!', '#5eff8f');
     else if(this.state==='fail') flashSuccess('¡SE CAYÓ EL PÉNDULO!', '#ff6b6b');
+    drawSignature();
   }
 };
 
