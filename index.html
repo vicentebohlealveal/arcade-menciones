@@ -155,6 +155,50 @@
     box-shadow:0 10px 30px rgba(0,0,0,0.6);
     max-width:96vw; max-height:84vh; width:860px; height:auto;
   }
+  @keyframes shakeAnim{
+    0%,100%{ transform:translate(0,0); }
+    20%{ transform:translate(-7px,3px); } 40%{ transform:translate(7px,-4px); }
+    60%{ transform:translate(-5px,-3px); } 80%{ transform:translate(5px,3px); }
+  }
+  @keyframes shakeHardAnim{
+    0%,100%{ transform:translate(0,0) rotate(0); }
+    15%{ transform:translate(-10px,5px) rotate(-1deg); } 30%{ transform:translate(10px,-6px) rotate(1deg); }
+    45%{ transform:translate(-9px,-5px) rotate(-1deg); } 60%{ transform:translate(9px,5px) rotate(1deg); }
+    75%{ transform:translate(-5px,3px) rotate(0); } 90%{ transform:translate(5px,-2px) rotate(0); }
+  }
+  #gameCanvas.shake{ animation: shakeAnim 0.35s ease-in-out; }
+  #gameCanvas.shake-hard{ animation: shakeHardAnim 0.55s ease-in-out; }
+
+  #fadeOverlay{
+    position:fixed; inset:0; background:#050b09; opacity:0; z-index:80;
+    pointer-events:none; transition:opacity .16s ease;
+  }
+  #fadeOverlay.on{ opacity:1; }
+
+  /* pantalla de reposo (atractor) en el menú tras un rato sin uso */
+  @keyframes blinkText{ 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+  #attractHint{
+    display:none; font-size:22px; color:#ffe98a; text-align:center;
+    animation: blinkText 1s ease-in-out infinite;
+  }
+  @keyframes pulseGlowAttract{
+    0%,100%{ box-shadow:0 0 0 3px var(--sel-color), 0 0 26px var(--sel-color); }
+    50%{ box-shadow:0 0 0 3px var(--sel-color), 0 0 50px var(--sel-color); }
+  }
+  #cards.attract-mode .card.selected{ animation: pulseGlowAttract 1.05s ease-in-out infinite; }
+
+  /* panel de estadísticas oculto para el/la operador(a) — se activa con la tecla "i" */
+  #statsPanel{
+    display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+    z-index:90; background:var(--bg-panel); border:3px solid var(--border);
+    border-radius:10px; padding:22px 30px; min-width:280px;
+    font-family:'VT323',monospace; font-size:20px; color:var(--text);
+    box-shadow:0 12px 40px rgba(0,0,0,0.7);
+  }
+  #statsPanel h3{ font-family:'Press Start 2P',monospace; font-size:14px; margin:0 0 14px 0; color:#5eff8f; }
+  #statsPanel .row{ display:flex; justify-content:space-between; gap:22px; margin:6px 0; }
+  #statsPanel .hint2{ margin-top:14px; font-size:15px; color:var(--text-dim); }
+
   #controls-line{
     font-size:18px; color:var(--text-dim); text-align:center; max-width:860px;
     background:var(--bg-panel); border:2px solid var(--border-soft); border-radius:8px;
@@ -164,8 +208,8 @@
 
   #vba-mark{
     position:fixed; right:10px; bottom:6px; z-index:5;
-    font-family:'VT323',monospace; font-size:12px; color:#dff2e6;
-    opacity:0.22; pointer-events:none; user-select:none;
+    font-family:'VT323',monospace; font-size:16px; color:#dff2e6;
+    opacity:0.3; pointer-events:none; user-select:none;
   }
 </style>
 </head>
@@ -176,6 +220,16 @@
 <div id="gp-status">🎮 Control no detectado — presiona un botón</div>
 <div id="exitRing" style="--p:0"></div>
 <div id="vba-mark">VBA</div>
+<div id="fadeOverlay"></div>
+<div id="statsPanel">
+  <h3>📊 ESTADÍSTICAS DE LA JORNADA</h3>
+  <div class="row"><span>Potencias</span><span id="st-potencias">0</span></div>
+  <div class="row"><span>Telecom</span><span id="st-telecom">0</span></div>
+  <div class="row"><span>Computadores</span><span id="st-computadores">0</span></div>
+  <div class="row"><span>Control</span><span id="st-control">0</span></div>
+  <div class="row"><b>TOTAL</b><b id="st-total">0</b></div>
+  <div class="hint2">tecla <b>i</b> para cerrar &nbsp;·&nbsp; <b>Shift+R</b> reinicia la sesión</div>
+</div>
 
 <!-- ===================== MENU ===================== -->
 <div id="screen-menu">
@@ -224,6 +278,7 @@
     <span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> elegir &nbsp;·&nbsp;
     <span class="kb a" data-key="a">A</span> entrar
   </p>
+  <p id="attractHint">🕹️ ¡TOCA UN BOTÓN PARA JUGAR! 🕹️</p>
 </div>
 
 <!-- ===================== GAME ===================== -->
@@ -357,6 +412,8 @@ function readInput(){
   if(pressed.a){ flashBadge('a'); sfxConfirm(); }
   if(pressed.b){ flashBadge('b'); sfxBack(); }
 
+  if(Object.values(debounced).some(v=>v)) lastActivityTime = performance.now();
+
   return {held:debounced, pressed:pressed};
 }
 
@@ -419,19 +476,67 @@ function renderMenuSelection(){
 }
 renderMenuSelection();
 
+/* ---------- transición con fundido entre menú y minijuego ---------- */
+const fadeOverlayEl = document.getElementById('fadeOverlay');
+function fadeSwitch(doSwitch){
+  fadeOverlayEl.classList.add('on');
+  setTimeout(()=>{
+    doSwitch();
+    requestAnimationFrame(()=> fadeOverlayEl.classList.remove('on'));
+  }, 170);
+}
+
+/* ---------- contador de partidas jugadas (persiste en este navegador) ---------- */
+function bumpPlayCount(id){
+  try{
+    const k = 'arcade_plays_'+id;
+    localStorage.setItem(k, (+(localStorage.getItem(k)||0))+1);
+    localStorage.setItem('arcade_plays_total', (+(localStorage.getItem('arcade_plays_total')||0))+1);
+  }catch(e){ /* localStorage puede fallar en modo privado; no es crítico */ }
+}
+function refreshStatsPanel(){
+  try{
+    mentionOrder.forEach(id=>{
+      document.getElementById('st-'+id).textContent = localStorage.getItem('arcade_plays_'+id) || 0;
+    });
+    document.getElementById('st-total').textContent = localStorage.getItem('arcade_plays_total') || 0;
+  }catch(e){}
+}
+let statsOpen = false;
+function toggleStats(){
+  statsOpen = !statsOpen;
+  if(statsOpen) refreshStatsPanel();
+  document.getElementById('statsPanel').style.display = statsOpen ? 'block' : 'none';
+}
+window.addEventListener('keydown', e=>{
+  if(e.key==='i' || e.key==='I') toggleStats();
+  if((e.key==='R') && e.shiftKey) resetSession();
+});
+
+/* ---------- reinicio rápido de sesión para el/la operador(a) (Shift+R) ---------- */
+function resetSession(){
+  mentionOrder.forEach(id => games[id].reset());
+  fadeSwitch(()=>{ backToMenu(); });
+}
+
 function enterGame(id){
-  currentScreen = id;
-  screenMenu.style.display = 'none';
-  screenGame.style.display = 'flex';
-  controlsLine.innerHTML = games[id].controlsHint +
-    ' &nbsp;·&nbsp; <span class="kb a" data-key="a">A</span>+<span class="kb b" data-key="b">B</span> (mantén) → menú';
-  games[id].reset();
+  bumpPlayCount(id);
+  fadeSwitch(()=>{
+    currentScreen = id;
+    screenMenu.style.display = 'none';
+    screenGame.style.display = 'flex';
+    controlsLine.innerHTML = games[id].controlsHint +
+      ' &nbsp;·&nbsp; <span class="kb a" data-key="a">A</span>+<span class="kb b" data-key="b">B</span> (mantén) → menú';
+    games[id].reset();
+  });
 }
 function backToMenu(){
-  currentScreen = 'menu';
-  screenGame.style.display = 'none';
-  screenMenu.style.display = 'flex';
-  renderMenuSelection();
+  fadeSwitch(()=>{
+    currentScreen = 'menu';
+    screenGame.style.display = 'none';
+    screenMenu.style.display = 'flex';
+    renderMenuSelection();
+  });
 }
 function updateMenu(input){
   if(input.rep.left)  menuSelection = (menuSelection + MENU_ITEMS - 1) % MENU_ITEMS;
@@ -441,6 +546,33 @@ function updateMenu(input){
     else toggleFullscreen();
   }
   renderMenuSelection();
+}
+
+/* ---------- pantalla de reposo (atractor) ----------
+   Si nadie toca nada por un rato estando en el menú, el arcade
+   empieza a "llamar la atención" solo, como las máquinas de verdad. */
+const IDLE_ATTRACT_MS = 25000;
+let lastActivityTime = performance.now();
+let attractOn = false, attractTimer = 0;
+function updateAttract(idleForGame, dtMs){
+  const idleMs = performance.now() - lastActivityTime;
+  if(currentScreen==='menu' && idleMs > IDLE_ATTRACT_MS){
+    if(!attractOn){
+      attractOn = true;
+      document.getElementById('attractHint').style.display = 'block';
+      document.getElementById('cards').classList.add('attract-mode');
+    }
+    attractTimer += dtMs;
+    if(attractTimer > 1050){
+      attractTimer = 0;
+      menuSelection = (menuSelection+1) % mentionOrder.length;
+      renderMenuSelection();
+    }
+  } else if(attractOn){
+    attractOn = false;
+    document.getElementById('attractHint').style.display = 'none';
+    document.getElementById('cards').classList.remove('attract-mode');
+  }
 }
 
 /* ============================================================
@@ -604,13 +736,68 @@ function drawKnob(cx, cy, r, value, target, tol, inZone, selected){
 /* firma discreta, casi imperceptible, en la esquina de cada minijuego */
 function drawSignature(){
   ctx.save();
-  ctx.globalAlpha = 0.28;
-  ctx.font = "9px 'VT323'";
+  ctx.globalAlpha = 0.36;
+  ctx.font = "13px 'VT323'";
   ctx.fillStyle = '#dff2e6';
   ctx.textAlign = 'right';
-  ctx.fillText('VBA', canvas.width-8, canvas.height-6);
+  ctx.fillText('VBA', canvas.width-9, canvas.height-7);
   ctx.restore();
 }
+
+/* pequeño temblor de pantalla para reforzar el logro (o el fallo) */
+function triggerShake(){
+  canvas.classList.remove('shake'); void canvas.offsetWidth;
+  canvas.classList.add('shake');
+  clearTimeout(canvas._shakeTimer);
+  canvas._shakeTimer = setTimeout(()=> canvas.classList.remove('shake'), 380);
+}
+function triggerShakeHard(){
+  canvas.classList.remove('shake-hard'); void canvas.offsetWidth;
+  canvas.classList.add('shake-hard');
+  clearTimeout(canvas._shakeTimer2);
+  canvas._shakeTimer2 = setTimeout(()=> canvas.classList.remove('shake-hard'), 580);
+}
+
+/* datos curiosos breves que aparecen junto al mensaje de éxito */
+const FACTS = {
+  potencias: [
+    'La potencia eléctrica se mide en WATTS (W).',
+    'Nikola Tesla impulsó el uso de la corriente alterna que hoy llega a tu casa.',
+    'Un panel solar transforma luz en electricidad sin partes móviles.',
+    'La primera red eléctrica pública se instaló en 1882, en Nueva York.'
+  ],
+  telecom: [
+    'El WiFi de tu casa viaja como ondas de radio, igual que esta señal.',
+    'Las fibras ópticas envían información usando pulsos de luz.',
+    'La primera llamada telefónica fue hecha por Graham Bell en 1876.',
+    'Los satélites de comunicación orbitan a más de 35.000 km de altura.'
+  ],
+  computadores: [
+    'Todo lo que hace un computador se reduce a combinar estas compuertas simples.',
+    'Un procesador moderno tiene miles de millones de transistores.',
+    'El primer computador electrónico, ENIAC, pesaba 27 toneladas.',
+    'El código binario usa solo dos símbolos: 0 y 1.'
+  ],
+  control: [
+    'Los aviones usan controladores PID para mantenerse estables en el aire.',
+    'Tu aire acondicionado usa un controlador para mantener la temperatura.',
+    'El "Kp" de un PID reacciona al error actual; el "Ki" corrige errores viejos.',
+    'Los brazos robóticos industriales usan control automático para no temblar.'
+  ]
+};
+function randomFact(id){
+  const arr = FACTS[id];
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+function drawFact(id, y){
+  ctx.save();
+  ctx.font = "14px 'VT323'";
+  ctx.fillStyle = '#9fc2ac';
+  ctx.textAlign = 'center';
+  ctx.fillText('💡 ¿SABÍAS QUE...? '+randomFactCache[id], canvas.width/2, y);
+  ctx.restore();
+}
+const randomFactCache = {};
 
 /* ============================================================
    GAME 1 — POTENCIAS Y CIRCUITOS
@@ -636,26 +823,47 @@ const POWER_LEVELS = [
 ];
 
 const potencias = {
-  level:0, grid:null, cur:{c:1,r:0}, connected:false, successTime:0, cellPx:0, ox:0, oy:0, energyPath:null, pulseT:0,
+  level:0, grid:null, cur:{c:1,r:0}, connected:false, successTime:0, cellPx:0, ox:0, oy:0, energyPath:null, pulseT:0, solved:0,
   reset(){
     this.level = 0;
+    this.solved = 0;
     this.setupLevel();
   },
   setupLevel(){
     const def = POWER_LEVELS[this.level % POWER_LEVELS.length];
     this.def = def;
-    this.grid = [];
-    for(let r=0;r<def.rows;r++){
-      const row=[];
-      for(let c=0;c<def.cols;c++){
-        row.push({type:PIECE_TYPES[Math.floor(Math.random()*4)], rot:Math.floor(Math.random()*4)});
+    const randomGrid = () => {
+      const g = [];
+      for(let r=0;r<def.rows;r++){
+        const row=[];
+        for(let c=0;c<def.cols;c++){
+          row.push({type:PIECE_TYPES[Math.floor(Math.random()*4)], rot:Math.floor(Math.random()*4)});
+        }
+        g.push(row);
       }
-      this.grid.push(row);
+      return g;
+    };
+    // Generamos tableros al azar hasta encontrar uno que NO esté ya
+    // resuelto de entrada (evita que el nivel "se pase solo" apenas
+    // empieza, algo que pasaba de vez en cuando con el azar puro).
+    let tries = 0;
+    do {
+      this.grid = randomGrid();
+      tries++;
+    } while (this.checkConnectivity() && tries < 60);
+    if(this.checkConnectivity()){
+      // último recurso: forzamos que la celda pegada al generador
+      // no apunte hacia la derecha, para cortar el camino a mano.
+      const bc = this.def.source.c+1, br = this.def.source.r;
+      if(bc < def.cols){
+        const cell = this.grid[br][bc];
+        cell.type='corner'; cell.rot = (cell.rot+1)%4;
+      }
     }
+    this.energyPath = null;
     this.cur = {c:1, r:Math.floor(def.rows/2)};
     this.connected = false;
     this.successTime = 0;
-    this.energyPath = null;
     this.pulseT = 0;
   },
   isFixed(c,r){
@@ -737,7 +945,11 @@ const potencias = {
       cell.rot = 0;
     }
     this.connected = this.checkConnectivity();
-    if(this.connected){ this.successTime = 1.4; this.pulseT = 0; sfxSuccess(); }
+    if(this.connected){
+      this.successTime = 2.1; this.pulseT = 0; this.solved++;
+      randomFactCache.potencias = randomFact('potencias');
+      sfxSuccess(); triggerShake();
+    }
   },
   drawCell(cx,cy,size,conns,color,glow){
     ctx.save();
@@ -760,6 +972,7 @@ const potencias = {
     bg();
     drawHeader('MENCIÓN 01 · POTENCIAS Y CIRCUITOS · NIVEL '+(this.level+1),'#ffcc00',
       'Conecta la energía desde el generador ⚡ hasta la carga 💡');
+    text('RESUELTOS '+this.solved, 828, 36, 12, '#ffcc00', 'Press Start 2P', 'right');
     const def = this.def;
     const areaX=40, areaY=90, areaW=780, areaH=300;
     const size = Math.min(areaW/def.cols, areaH/def.rows);
@@ -828,7 +1041,10 @@ const potencias = {
       pulseCircle(px, py, size*0.16, '#eaffb0');
     }
 
-    if(this.successTime>0.05) flashSuccess('¡ENERGÍA ENTREGADA!', '#5eff8f');
+    if(this.successTime>0.05){
+      flashSuccess('¡ENERGÍA ENTREGADA!', '#5eff8f');
+      drawFact('potencias', canvas.height/2 + 34);
+    }
     drawSignature();
   }
 };
@@ -838,10 +1054,10 @@ const potencias = {
    ◀▶ ajustan la frecuencia · ▲▼ ajustan la amplitud
    ============================================================ */
 const telecom = {
-  freq:2, amp:0.5, targetFreq:3, targetAmp:0.7, successTime:0, matched:false,
+  freq:2, amp:0.5, targetFreq:3, targetAmp:0.7, successTime:0, matched:false, matches:0,
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> frecuencia &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> amplitud &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> nueva señal',
   reset(){
-    this.freq = 2; this.amp = 0.5;
+    this.freq = 2; this.amp = 0.5; this.matches = 0;
     this.newTarget();
   },
   newTarget(){
@@ -863,11 +1079,15 @@ const telecom = {
 
     const closeFreq = Math.abs(this.freq-this.targetFreq) < 0.26;
     const closeAmp  = Math.abs(this.amp-this.targetAmp) < 0.07;
-    if(closeFreq && closeAmp && this.successTime<=0){ this.matched=true; this.successTime = 1.4; sfxSuccess(); }
+    if(closeFreq && closeAmp && this.successTime<=0){
+      this.matched=true; this.successTime = 1.4; this.matches=(this.matches||0)+1;
+      sfxSuccess(); triggerShake(); randomFactCache.telecom = randomFact('telecom');
+    }
   },
   draw(){
     bg();
     drawHeader('MENCIÓN 02 · TELECOMUNICACIONES','#00e5ff','Sintoniza tu señal (cian) hasta calzar con la señal objetivo (gris)');
+    text('SEÑALES CAPTURADAS: '+this.matches, 818, 36, 13, '#7ea8ad','Press Start 2P','right');
 
     panel(40,90,780,240,'#1b4a55','rgba(6,20,24,0.7)',10);
     const x0=60, x1=800, midY=210, W=x1-x0;
@@ -899,7 +1119,10 @@ const telecom = {
     text('AMPLITUD',450,368,14,'#7ea8ad','Press Start 2P');
     text((this.amp*100).toFixed(0)+' %',450,398,22,'#00e5ff','Press Start 2P');
 
-    if(this.successTime>0.05) flashSuccess('¡SEÑAL CAPTURADA!', '#5eff8f');
+    if(this.successTime>0.05){
+      flashSuccess('¡SEÑAL CAPTURADA!', '#5eff8f');
+      drawFact('telecom', 268);
+    }
     drawSignature();
   }
 };
@@ -908,31 +1131,46 @@ const telecom = {
    GAME 3 — COMPUTADORES
    Compuertas lógicas: observa el ejemplo animado y completa
    la tabla de verdad. ▲▼ elige fila · A alterna 0/1 · B revisa
+   Tras 3 aciertos se desbloquea, a veces, una versión con 3
+   entradas (modo difícil) para seguir subiendo el desafío.
    ============================================================ */
-const GATES = ['AND','OR','XOR','NAND','NOR','XNOR'];
-function gateTruth(g,a,b){
+const GATES2 = ['AND','OR','XOR','NAND','NOR','XNOR'];
+const GATES3 = ['AND','OR','NAND','NOR'];
+function gateTruthN(g,bits){
+  const any = bits.some(b=>b), all = bits.every(b=>b);
+  const parity = bits.reduce((s,b)=>s+b,0)%2;
   switch(g){
-    case 'AND':  return (a&&b)?1:0;
-    case 'OR':   return (a||b)?1:0;
-    case 'XOR':  return (a^b)?1:0;
-    case 'NAND': return (a&&b)?0:1;
-    case 'NOR':  return (a||b)?0:1;
-    case 'XNOR': return (a^b)?0:1;
+    case 'AND':  return all?1:0;
+    case 'OR':   return any?1:0;
+    case 'XOR':  return parity?1:0;
+    case 'NAND': return all?0:1;
+    case 'NOR':  return any?0:1;
+    case 'XNOR': return parity?0:1;
   }
   return 0;
 }
 const computadores = {
-  gate:'AND', guess:[0,0,0,0], correct:null, cursor:0, checked:false, ok:false,
-  successTime:0, demoIdx:0, demoTimer:0, feedback:'',
+  gate:'AND', inputs:2, guess:[0,0,0,0], correct:null, cursor:0, checked:false, ok:false,
+  successTime:0, demoIdx:0, demoTimer:0, feedback:'', solved:0,
   controlsHint:'<span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> elegir fila &nbsp;·&nbsp; <span class="kb a" data-key="a">A</span> cambia 0/1 &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> revisar',
   rows:[[0,0],[0,1],[1,0],[1,1]],
-  reset(){ this.newGate(); },
+  reset(){ this.solved = 0; this.newGate(); },
   newGate(){
-    this.gate = GATES[Math.floor(Math.random()*GATES.length)];
-    this.guess = [0,0,0,0];
-    this.correct = this.rows.map(([a,b])=>gateTruth(this.gate,a,b));
-    this.cursor = 0; this.checked=false; this.ok=false; this.successTime=0;
-    this.feedback = 'COMPLETA LA TABLA Y PULSA B';
+    const canHard = this.solved >= 3;
+    const hard = canHard && Math.random() < 0.5;
+    this.inputs = hard ? 3 : 2;
+    const list = hard ? GATES3 : GATES2;
+    this.gate = list[Math.floor(Math.random()*list.length)];
+    this.rows = [];
+    for(let m=0; m<(1<<this.inputs); m++){
+      const bits=[];
+      for(let b=this.inputs-1; b>=0; b--) bits.push((m>>b)&1);
+      this.rows.push(bits);
+    }
+    this.guess = this.rows.map(()=>0);
+    this.correct = this.rows.map(bits => gateTruthN(this.gate, bits));
+    this.cursor = 0; this.checked=false; this.ok=false; this.successTime=0; this.demoIdx=0;
+    this.feedback = hard ? '¡MODO DIFÍCIL! 3 ENTRADAS' : 'COMPLETA LA TABLA Y PULSA B';
   },
   update(input){
     if(this.successTime>0){
@@ -941,10 +1179,11 @@ const computadores = {
       return;
     }
     this.demoTimer += 1/60;
-    if(this.demoTimer > 0.9){ this.demoTimer=0; this.demoIdx = (this.demoIdx+1)%4; }
+    if(this.demoTimer > 0.9){ this.demoTimer=0; this.demoIdx = (this.demoIdx+1)%this.rows.length; }
 
-    if(input.rep.up)   this.cursor = (this.cursor+3)%4;
-    if(input.rep.down) this.cursor = (this.cursor+1)%4;
+    const n = this.rows.length;
+    if(input.rep.up)   this.cursor = (this.cursor+n-1)%n;
+    if(input.rep.down) this.cursor = (this.cursor+1)%n;
     if(input.pressed.a){
       this.guess[this.cursor] = this.guess[this.cursor]?0:1;
       this.checked=false;
@@ -952,11 +1191,14 @@ const computadores = {
     if(input.pressed.b){
       this.checked = true;
       this.ok = this.guess.every((v,i)=>v===this.correct[i]);
-      if(this.ok){ this.feedback='¡TABLA CORRECTA!'; this.successTime=1.4; sfxSuccess(); }
-      else { this.feedback = 'REVISA LAS FILAS EN ROJO'; sfxFail(); }
+      if(this.ok){
+        this.feedback='¡TABLA CORRECTA!'; this.successTime=1.4; this.solved++;
+        randomFactCache.computadores = randomFact('computadores');
+        sfxSuccess(); triggerShake();
+      } else { this.feedback = 'REVISA LAS FILAS EN ROJO'; sfxFail(); }
     }
   },
-  drawGateSymbol(x,y,w,h,g){
+  drawGateSymbol(x,y,w,h,g,nIn){
     ctx.save();
     ctx.strokeStyle='#5eff8f'; ctx.lineWidth=3; ctx.lineJoin='round';
     ctx.beginPath();
@@ -977,29 +1219,32 @@ const computadores = {
     if(g==='NAND'||g==='NOR'||g==='XNOR'){
       ctx.beginPath(); ctx.arc(x+w+8,y+h/2,6,0,Math.PI*2); ctx.stroke();
     }
-    // input stubs
+    // input stubs (2 o 3 según la compuerta)
     ctx.beginPath();
-    ctx.moveTo(x-24,y+h*0.28); ctx.lineTo(x,y+h*0.28);
-    ctx.moveTo(x-24,y+h*0.72); ctx.lineTo(x,y+h*0.72);
+    for(let k=0;k<nIn;k++){
+      const fy = y + h*((k+1)/(nIn+1));
+      ctx.moveTo(x-24,fy); ctx.lineTo(x,fy);
+    }
     const outX = (g==='NAND'||g==='NOR'||g==='XNOR') ? x+w+14 : x+w;
     ctx.moveTo(x+w, y+h/2); ctx.lineTo(outX+22, y+h/2);
     ctx.stroke();
     ctx.restore();
   },
-  drawSwitchLamp(x,y,a,b,out){
-    // two switches
-    for(let i=0;i<2;i++){
-      const sx=x, sy=y+i*46;
-      text(i===0?'A':'B', sx-26, sy+5, 16, '#9fc2ac');
-      panel(sx, sy-14, 60, 28, '#3a6b4c', '#0f231a', 14);
-      const on = i===0?a:b;
+  drawSwitchLamp(x,y,bits,out){
+    const n = bits.length;
+    const spacing = n>2 ? 34 : 46;
+    for(let i=0;i<n;i++){
+      const sx=x, sy=y+i*spacing;
+      text(String.fromCharCode(65+i), sx-26, sy+5, 16, '#9fc2ac');
+      panel(sx, sy-12, 56, 24, '#3a6b4c', '#0f231a', 12);
+      const on = bits[i];
       ctx.save();
       ctx.fillStyle = on ? '#5eff8f':'#3a5a48';
-      ctx.beginPath(); ctx.arc(sx + (on?46:14), sy, 11, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + (on?43:13), sy, 10, 0, Math.PI*2); ctx.fill();
       ctx.restore();
     }
     // bulb
-    const bx=x+120, by=y+22;
+    const bx=x+118, by = y + (n*spacing)/2 - spacing/2;
     ctx.save();
     ctx.beginPath(); ctx.arc(bx,by,20,0,Math.PI*2);
     if(out){ ctx.shadowColor='#ffe98a'; ctx.shadowBlur=22; ctx.fillStyle='#ffe98a'; }
@@ -1012,41 +1257,47 @@ const computadores = {
   draw(){
     bg();
     drawHeader('MENCIÓN 03 · COMPUTADORES','#5eff8f','Mira el ejemplo y luego completa la tabla de verdad');
+    text('RESUELTAS '+this.solved, 828, 36, 12, '#5eff8f', 'Press Start 2P', 'right');
 
     // left: gate symbol + animated switch/lamp demo
     panel(40,90,360,300,'#31553e','rgba(6,21,15,0.9)',10);
-    text('COMPUERTA: '+this.gate, 60,120,16,'#5eff8f','Press Start 2P');
-    this.drawGateSymbol(90,150,90,60,this.gate);
+    text('COMPUERTA: '+this.gate+(this.inputs===3?' (3 ENTRADAS)':''), 60,120,15,'#5eff8f','Press Start 2P');
+    this.drawGateSymbol(90,150,90,60,this.gate,this.inputs);
 
-    const [da,db] = this.rows[this.demoIdx];
-    const dout = gateTruth(this.gate, da, db);
+    const dbits = this.rows[this.demoIdx];
+    const dout = gateTruthN(this.gate, dbits);
     text('EJEMPLO EN VIVO',60,260,13,'#9fc2ac','Press Start 2P');
-    this.drawSwitchLamp(90,290,da,db,dout);
-    text('A='+da+'  B='+db+'  →  SALIDA='+dout, 60,370,17,'#dff2e6');
+    this.drawSwitchLamp(90,285,dbits,dout);
+    text(dbits.map((b,i)=>String.fromCharCode(65+i)+'='+b).join('  ')+'  →  SALIDA='+dout, 60,375,16,'#dff2e6');
 
-    // right: fill-in truth table
+    // right: fill-in truth table (columnas dinámicas según nº de entradas)
     panel(420,90,400,300,'#31553e','rgba(6,21,15,0.9)',10);
-    text('TABLA DE VERDAD — TU TURNO',440,120,14,'#5eff8f','Press Start 2P');
-    const headers=['A','B','SALIDA'];
-    headers.forEach((h,i)=> text(h, 470+i*110, 152, 15,'#9fc2ac','Press Start 2P','center'));
-    for(let i=0;i<4;i++){
-      const yy = 185 + i*33;
+    text('TABLA DE VERDAD — TU TURNO',440,120,13,'#5eff8f','Press Start 2P');
+    const headers = [...Array(this.inputs)].map((_,i)=>String.fromCharCode(65+i)).concat('SALIDA');
+    const colX = i => 458 + i*(320/(headers.length-1));
+    headers.forEach((h,i)=> text(h, colX(i), 147, 14,'#9fc2ac','Press Start 2P','center'));
+
+    const top=168, bottom=380, n=this.rows.length;
+    const rowH = (bottom-top)/n;
+    const fsz = rowH<28 ? 13 : 19;
+    for(let i=0;i<n;i++){
+      const yy = top + i*rowH + rowH*0.66;
       const sel = i===this.cursor;
-      if(sel){ ctx.save(); ctx.fillStyle='rgba(94,255,143,0.10)'; ctx.fillRect(432,yy-20,376,30); ctx.restore(); }
-      const [a,b] = this.rows[i];
-      text(String(a), 470, yy, 20, '#dff2e6','Press Start 2P','center');
-      text(String(b), 580, yy, 20, '#dff2e6','Press Start 2P','center');
+      if(sel){ ctx.save(); ctx.fillStyle='rgba(94,255,143,0.10)'; ctx.fillRect(432,yy-rowH*0.62,376,rowH); ctx.restore(); }
+      this.rows[i].forEach((v,ci)=> text(String(v), colX(ci), yy, fsz, '#dff2e6','Press Start 2P','center'));
       let outColor = '#dff2e6';
       if(this.checked) outColor = (this.guess[i]===this.correct[i]) ? '#5eff8f' : '#ff6b6b';
       else if(sel) outColor = '#ffe98a';
-      text(String(this.guess[i]), 690, yy, 20, outColor,'Press Start 2P','center');
+      const outCx = colX(headers.length-1);
+      text(String(this.guess[i]), outCx, yy, fsz, outColor,'Press Start 2P','center');
       if(sel){
         ctx.save(); ctx.strokeStyle='#fff'; ctx.lineWidth=2;
-        ctx.strokeRect(660, yy-20, 60, 28);
+        ctx.strokeRect(outCx-30, yy-rowH*0.62, 60, rowH*0.9);
         ctx.restore();
       }
     }
     text(this.feedback, 620, 415, 15, this.ok?'#5eff8f':'#ffcc55','Press Start 2P','center');
+    if(this.ok && this.successTime>0.05) drawFact('computadores', 432);
 
     if(this.successTime>0.05) flashSuccess('¡LÓGICA VALIDADA!', '#5eff8f');
     drawSignature();
@@ -1113,8 +1364,12 @@ const control = {
     const allIn = this.dials.every(dd => Math.abs(dd.value-dd.target) <= this.tol);
     this.inZoneTime = allIn ? this.inZoneTime + 1/60 : 0;
 
-    if(this.inZoneTime > 0.65){ this.state='success'; this.stateTime=1.6; sfxSuccess(); }
-    else if(this.timeLeft <= 0){ this.state='fail'; this.stateTime=1.8; sfxFail(); }
+    if(this.inZoneTime > 0.65){
+      this.state='success'; this.stateTime=1.6;
+      randomFactCache.control = randomFact('control');
+      sfxSuccess(); triggerShake();
+    }
+    else if(this.timeLeft <= 0){ this.state='fail'; this.stateTime=1.8; sfxFail(); triggerShakeHard(); }
   },
   draw(){
     bg();
@@ -1161,7 +1416,7 @@ const control = {
     text(selDial.name+':', 58,400,15,'#ffcc55','Press Start 2P');
     wrapText(this.info[selDial.name], 58,424, 740, 20, 16, '#dff2e6');
 
-    if(this.state==='success') flashSuccess('¡PÉNDULO ESTABILIZADO!', '#5eff8f');
+    if(this.state==='success'){ flashSuccess('¡PÉNDULO ESTABILIZADO!', '#5eff8f'); drawFact('control', 300); }
     else if(this.state==='fail') flashSuccess('¡SE CAYÓ EL PÉNDULO!', '#ff6b6b');
     drawSignature();
   }
@@ -1204,6 +1459,7 @@ function mainLoop(){
   const input = computeRepeat(readInput(), FRAME_MS);
   if(currentScreen==='menu'){
     updateMenu(input);
+    updateAttract(false, FRAME_MS);
   } else {
     updateExitCombo(input, FRAME_MS);
     if(input.pressed.start){
