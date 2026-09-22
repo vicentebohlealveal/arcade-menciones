@@ -60,6 +60,16 @@
     background:var(--bg-panel); color:var(--text-dim);
   }
   #gp-status.connected{ color:#5eff8f; border-color:#2f6b45; }
+  #muteBtn{
+    position:fixed; top:14px; right:230px; z-index:60;
+    font-size:20px; padding:5px 10px; border:2px solid var(--border); border-radius:6px;
+    background:var(--bg-panel); cursor:pointer; line-height:1;
+  }
+  #credits-mark{
+    position:fixed; left:14px; bottom:8px; z-index:5;
+    font-family:'VT323',monospace; font-size:14px; color:#7ea88c;
+    opacity:0.6; user-select:none;
+  }
 
   /* ---------- MENU ---------- */
   #screen-menu{
@@ -218,6 +228,7 @@
 <div id="crt"></div>
 <div id="vignette"></div>
 <div id="gp-status">🎮 Control no detectado — presiona un botón</div>
+<button id="muteBtn" onclick="toggleMusicMute()" title="Silenciar música">🔊</button>
 <div id="exitRing" style="--p:0"></div>
 <div id="vba-mark">VBA</div>
 <div id="fadeOverlay"></div>
@@ -279,6 +290,7 @@
     <span class="kb a" data-key="a">A</span> entrar
   </p>
   <p id="attractHint">🕹️ ¡TOCA UN BOTÓN PARA JUGAR! 🕹️</p>
+  <div id="credits-mark">Proyecto de difusión · Mención ELO · Ingeniería Civil Electrónica USM</div>
 </div>
 
 <!-- ===================== GAME ===================== -->
@@ -308,10 +320,16 @@ window.addEventListener('mouseup',   () => mouseHeld = false);
    ============================================================ */
 let audioCtx = null;
 function ensureAudio(){
+  const wasNull = !audioCtx;
   if(!audioCtx){
     try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
   }
   if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+  // el navegador bloquea el audio hasta el primer gesto del usuario;
+  // en cuanto se desbloquea, arrancamos la música de la pantalla actual
+  if(wasNull && audioCtx && !musicMuted && typeof currentScreen!=='undefined' && !musicTimer){
+    playMusic(currentScreen==='menu' ? 'menu' : currentScreen);
+  }
 }
 ['keydown','mousedown','touchstart'].forEach(ev=>window.addEventListener(ev, ensureAudio, {once:false}));
 function beep(freq, dur, type, vol){
@@ -337,6 +355,48 @@ function sfxFail(){
   [320,220,140].forEach((f,i)=> setTimeout(()=>beep(f,0.18,'sawtooth',0.10), i*90));
 }
 function sfxMenu(){ beep(180,0.05,'triangle',0.08); }
+
+/* ============================================================
+   MÚSICA — un loop chiptune corto y distinto por pantalla,
+   generado con osciladores (sin archivos de audio externos).
+   Empieza suave; hay un botón de silencio en la esquina.
+   ============================================================ */
+let musicMuted = false;
+let musicVol = 0.05;
+let musicTimer = null;
+let musicStep = 0;
+let currentMusicId = null;
+
+const MUSIC = {
+  menu:        { tempo:230, wave:'square',   notes:[440,0,554,660, 0,660,554,440, 392,0,494,587, 0,587,494,392] },
+  potencias:   { tempo:190, wave:'square',   notes:[523,659,784,659, 523,659,784,988, 523,659,784,1046, 988,784,659,523] },
+  telecom:     { tempo:225, wave:'triangle', notes:[330,392,440,392, 330,262,330,392, 349,415,466,415, 349,294,349,415] },
+  computadores:{ tempo:175, wave:'square',   notes:[220,0,220,330, 0,220,262,0, 247,0,247,370, 0,247,294,0] },
+  control:     { tempo:150, wave:'sawtooth', notes:[196,0,247,0, 220,0,262,0, 196,0,233,0, 174,0,220,262] }
+};
+
+function stopMusic(){
+  if(musicTimer){ clearInterval(musicTimer); musicTimer=null; }
+}
+function playMusic(id){
+  currentMusicId = id;
+  stopMusic();
+  if(musicMuted || !audioCtx || !MUSIC[id]) return;
+  const cfg = MUSIC[id];
+  musicStep = 0;
+  musicTimer = setInterval(()=>{
+    const freq = cfg.notes[musicStep % cfg.notes.length];
+    if(freq) beep(freq, cfg.tempo/1000*0.82, cfg.wave, musicVol);
+    musicStep++;
+  }, cfg.tempo);
+}
+function toggleMusicMute(){
+  musicMuted = !musicMuted;
+  const btn = document.getElementById('muteBtn');
+  if(btn) btn.textContent = musicMuted ? '🔇' : '🔊';
+  if(musicMuted) stopMusic();
+  else if(currentMusicId) playMusic(currentMusicId);
+}
 
 /* small visual flash on the on-screen key badges, so the child
    sees (not just hears) that the input was registered */
@@ -528,6 +588,7 @@ function enterGame(id){
     controlsLine.innerHTML = games[id].controlsHint +
       ' &nbsp;·&nbsp; mantén <span class="kb b" data-key="b">B</span> → menú';
     games[id].reset();
+    playMusic(id);
   });
 }
 function backToMenu(){
@@ -536,6 +597,7 @@ function backToMenu(){
     screenGame.style.display = 'none';
     screenMenu.style.display = 'flex';
     renderMenuSelection();
+    playMusic('menu');
   });
 }
 function updateMenu(input){
@@ -619,10 +681,43 @@ function wrapText(t,x,y,maxWidth,lineH,size,color,font){
   ctx.fillText(line, x, yy);
   ctx.restore();
 }
-function drawHeader(title, color, subtitle){
+function drawHeader(title, color, subtitle, factId){
   panel(14,10,832,60,color,'rgba(6,18,13,0.95)',8);
   text(title,32,36,15,color,'Press Start 2P');
-  if(subtitle) text(subtitle,32,58,16,'#9fc2ac','VT323');
+  if(!subtitle) return;
+  if(!factId){ text(subtitle,32,58,16,'#9fc2ac','VT323'); return; }
+
+  // el dato curioso se cruza suavemente con el texto de instrucciones
+  // (fade in/out) y aparece resaltado en una "píldora" con brillo,
+  // para que se note y se lea bien sin taparlo de golpe.
+  const period=9500, factWindow=4400, fade=420;
+  const t = performance.now()%period;
+  const inFactWindow = t > period-factWindow;
+  let aFact=0, aInstr=1;
+  if(inFactWindow){
+    const into = t-(period-factWindow);
+    if(into<fade) aFact = into/fade;
+    else if(into>factWindow-fade) aFact = (factWindow-into)/fade;
+    else aFact = 1;
+    aInstr = 1-aFact;
+  }
+  if(aInstr>0.02){
+    ctx.save(); ctx.globalAlpha=aInstr; text(subtitle,32,58,16,'#9fc2ac','VT323'); ctx.restore();
+  }
+  if(aFact>0.02){
+    const factStr = '💡 Dato curioso: '+(randomFactCache[factId] || subtitle);
+    ctx.save();
+    ctx.globalAlpha = aFact;
+    ctx.font = "15px 'VT323'";
+    const w = ctx.measureText(factStr).width;
+    ctx.shadowColor = '#ffe98a'; ctx.shadowBlur = 10*aFact;
+    panel(26, 46, Math.min(800, w+24), 25, '#ffe98a', 'rgba(60,50,10,0.55)', 12);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ffe98a';
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    ctx.fillText(factStr, 38, 63);
+    ctx.restore();
+  }
 }
 /* barra de tiempo compartida: se pone roja cuando queda poco */
 function drawTimerBar(timeLeft, timeMax, y){
@@ -632,13 +727,25 @@ function drawTimerBar(timeLeft, timeMax, y){
   ctx.fillStyle = pct>0.3 ? '#5eff8f' : '#ff6b6b';
   ctx.fillRect(17,y+3, 826*pct, 10);
 }
-function flashSuccess(t,color){
+function flashSuccess(t,color,age){
+  age = age===undefined ? 1 : age;
+  // destello de color breve sobre toda la pantalla (se apaga rápido)
+  const flashA = Math.max(0, 0.22*(1-age/0.25));
+  if(flashA>0.003){
+    ctx.save(); ctx.globalAlpha=flashA; ctx.fillStyle=color; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.restore();
+  }
+  // rebote de "pop-in" tipo sticker al aparecer el texto
+  const p = Math.min(1, age/0.28);
+  const c1=1.70158, c3=c1+1;
+  const scale = age>=1 ? 1 : Math.max(0.05, 1 + c3*Math.pow(p-1,3) + c1*Math.pow(p-1,2));
   ctx.save();
+  ctx.translate(canvas.width/2, canvas.height/2);
+  ctx.scale(scale, scale);
   ctx.font = "30px 'Press Start 2P'";
-  ctx.textAlign='center';
+  ctx.textAlign='center'; ctx.textBaseline='alphabetic';
   ctx.fillStyle = color;
   ctx.shadowColor = color; ctx.shadowBlur = 22;
-  ctx.fillText(t, canvas.width/2, canvas.height/2);
+  ctx.fillText(t, 0, 0);
   ctx.restore();
 }
 function pulseCircle(x,y,r,color){
@@ -833,12 +940,6 @@ function randomFact(id){
    ahora se turna con el texto de instrucciones en la franja superior
    (siempre visible, letra grande) para que todos alcancen a leerlo
    sin frenar el ritmo del juego. */
-function tickerText(defaultText, factId){
-  const cyclePeriod = 9000, factWindow = 4200;
-  const t = performance.now() % cyclePeriod;
-  if(t > cyclePeriod - factWindow) return '💡 '+(randomFactCache[factId] || defaultText);
-  return defaultText;
-}
 const randomFactCache = {};
 
 /* ============================================================
@@ -1027,7 +1128,7 @@ const potencias = {
   draw(){
     bg();
     drawHeader('MENCIÓN 01 · POTENCIAS Y CIRCUITOS · NIVEL '+(this.level+1),'#ffcc00',
-      tickerText('Conecta la energía desde el generador ⚡ hasta la carga 💡', 'potencias'));
+      'Conecta la energía desde el generador ⚡ hasta la carga 💡', 'potencias');
     drawTimerBar(this.timeLeft, this.timeMax);
     const def = this.def;
     const areaX=40, areaY=100, areaW=780, areaH=290;
@@ -1098,10 +1199,10 @@ const potencias = {
     }
 
     if(this.successTime>0.05){
-      flashSuccess('¡ENERGÍA ENTREGADA!', '#5eff8f');
+      flashSuccess('¡ENERGÍA ENTREGADA!', '#5eff8f', 2.1-this.successTime);
     }
     if(this.timeoutTime>0.05){
-      flashSuccess('¡SE ACABÓ EL TIEMPO!', '#ff6b6b');
+      flashSuccess('¡SE ACABÓ EL TIEMPO!', '#ff6b6b', 1.3-this.timeoutTime);
       ctx.save(); ctx.font="16px 'VT323'"; ctx.fillStyle='#ffcfcf'; ctx.textAlign='center';
       ctx.fillText('Vuelve a intentarlo', canvas.width/2, canvas.height/2+30);
       ctx.restore();
@@ -1161,7 +1262,7 @@ const telecom = {
   draw(){
     bg();
     drawHeader('MENCIÓN 02 · TELECOMUNICACIONES · NIVEL '+(this.level+1),'#00e5ff',
-      tickerText('Sintoniza tu señal (cian) hasta calzar con la señal objetivo (gris)', 'telecom'));
+      'Sintoniza tu señal (cian) hasta calzar con la señal objetivo (gris)', 'telecom');
     drawTimerBar(this.timeLeft, this.timeMax);
 
     panel(40,100,780,230,'#1b4a55','rgba(6,20,24,0.7)',10);
@@ -1195,13 +1296,10 @@ const telecom = {
     text((this.amp*100).toFixed(0)+' %',450,398,22,'#00e5ff','Press Start 2P');
 
     if(this.successTime>0.05){
-      flashSuccess('¡SEÑAL CAPTURADA!', '#5eff8f');
+      flashSuccess('¡SEÑAL CAPTURADA!', '#5eff8f', 1.4-this.successTime);
     }
     if(this.timeoutTime>0.05){
-      flashSuccess('¡SE ACABÓ EL TIEMPO!', '#ff6b6b');
-      ctx.save(); ctx.font="16px 'VT323'"; ctx.fillStyle='#ffcfcf'; ctx.textAlign='center';
-      ctx.fillText('Nueva señal en camino...', canvas.width/2, 268);
-      ctx.restore();
+      flashSuccess('¡SE ACABÓ EL TIEMPO!', '#ff6b6b', 1.3-this.timeoutTime);
     }
   }
 };
@@ -1341,7 +1439,7 @@ const computadores = {
   draw(){
     bg();
     drawHeader('MENCIÓN 03 · COMPUTADORES · NIVEL '+(this.level+1),'#5eff8f',
-      tickerText('Mira el ejemplo y luego completa la tabla de verdad', 'computadores'));
+      'Mira el ejemplo y luego completa la tabla de verdad', 'computadores');
     drawTimerBar(this.timeLeft, this.timeMax);
 
     // left: gate symbol + animated switch/lamp demo
@@ -1382,12 +1480,9 @@ const computadores = {
     }
     text(this.feedback, 620, 415, 15, this.ok?'#5eff8f':'#ffcc55','Press Start 2P','center');
 
-    if(this.successTime>0.05) flashSuccess('¡LÓGICA VALIDADA!', '#5eff8f');
+    if(this.successTime>0.05) flashSuccess('¡LÓGICA VALIDADA!', '#5eff8f', 1.4-this.successTime);
     if(this.timeoutTime>0.05){
-      flashSuccess('¡SE ACABÓ EL TIEMPO!', '#ff6b6b');
-      ctx.save(); ctx.font="16px 'VT323'"; ctx.fillStyle='#ffcfcf'; ctx.textAlign='center';
-      ctx.fillText('Nueva compuerta en camino...', canvas.width/2, canvas.height/2+30);
-      ctx.restore();
+      flashSuccess('¡SE ACABÓ EL TIEMPO!', '#ff6b6b', 1.3-this.timeoutTime);
     }
   }
 };
@@ -1467,7 +1562,7 @@ const control = {
   draw(){
     bg();
     drawHeader('MENCIÓN 04 · CONTROL AUTOMÁTICO · NIVEL '+this.round,'#ff6b3d',
-      tickerText('Lleva las 3 perillas a la zona VERDE antes que se acabe el tiempo', 'control'));
+      'Lleva las 3 perillas a la zona VERDE antes que se acabe el tiempo', 'control');
     drawTimerBar(this.timeLeft, this.timeMax);
 
     // pendulum
@@ -1504,8 +1599,8 @@ const control = {
     text(selDial.name+':', 58,400,15,'#ffcc55','Press Start 2P');
     wrapText(this.info[selDial.name], 58,424, 740, 20, 16, '#dff2e6');
 
-    if(this.state==='success') flashSuccess('¡PÉNDULO ESTABILIZADO!', '#5eff8f');
-    else if(this.state==='fail') flashSuccess('¡SE CAYÓ EL PÉNDULO!', '#ff6b6b');
+    if(this.state==='success') flashSuccess('¡PÉNDULO ESTABILIZADO!', '#5eff8f', 1.6-this.stateTime);
+    else if(this.state==='fail') flashSuccess('¡SE CAYÓ EL PÉNDULO!', '#ff6b6b', 1.8-this.stateTime);
   }
 };
 
