@@ -463,8 +463,8 @@
 </div>
 <div id="idleWarning"></div>
 <div id="game-brand" aria-hidden="true">
-  <div class="brand-box"><img id="gameBrandUsm" alt="Logo institucional"></div>
-  <div class="brand-box"><img id="gameBrandDepto" alt="Logo del departamento"></div>
+  <div class="brand-box"><img id="gameBrandUsm" alt="Logo institucional" data-canva-asset="MAHV-iWA8xM"></div>
+  <div class="brand-box"><img id="gameBrandDepto" alt="Logo del departamento" data-canva-asset="MAHV-rbxvLY"></div>
 </div>
 <div class="finish-card" id="finishCard">
   <div class="finish-inner">
@@ -1233,10 +1233,37 @@ function drawHeader(title, color, subtitle, factId){
 /* barra de tiempo compartida: se pone roja cuando queda poco */
 function drawTimerBar(timeLeft, timeMax, y){
   y = y===undefined?78:y;
-  const pct = Math.max(0, timeLeft/timeMax);
-  panel(14,y,832,16,'#3a5a44','rgba(10,20,15,0.85)',5);
-  ctx.fillStyle = pct>0.3 ? '#5eff8f' : '#ff6b6b';
-  ctx.fillRect(17,y+3, 826*pct, 10);
+  const pct = Math.max(0, Math.min(1, timeLeft/timeMax));
+  panel(14,y,832,18,'#3a5a44','rgba(10,20,15,0.92)',5);
+
+  // La barra avisa visualmente cuánto queda: verde -> amarillo -> rojo.
+  // El cambio es progresivo para que no parezca un salto brusco.
+  let r,g,b;
+  if(pct > 0.5){
+    const t=(pct-0.5)/0.5;
+    r=Math.round(255*(1-t)+94*t);
+    g=Math.round(204*(1-t)+255*t);
+    b=Math.round(0*(1-t)+143*t);
+  }else{
+    const t=pct/0.5;
+    r=255;
+    g=Math.round(107*(1-t)+204*t);
+    b=Math.round(70*(1-t)+0*t);
+  }
+  const color=`rgb(${r},${g},${b})`;
+  ctx.save();
+  ctx.shadowColor=color;
+  ctx.shadowBlur=pct<0.25 ? 10 : 5;
+  ctx.fillStyle=color;
+  ctx.fillRect(17,y+3, 826*pct, 12);
+  ctx.restore();
+
+  // Pequeños hitos ayudan a interpretar el tiempo sin agregar números.
+  ctx.save();
+  ctx.fillStyle='rgba(255,255,255,.14)';
+  ctx.fillRect(17+826*.5,y+3,2,12);
+  ctx.fillRect(17+826*.25,y+3,2,12);
+  ctx.restore();
 }
 function flashSuccess(t,color,age,sub){
   age = age===undefined ? 1 : age;
