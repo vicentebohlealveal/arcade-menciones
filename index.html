@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Arcade de Menciones — Ingeniería Eléctrica</title>
+<title>Arcade de Menciones — Ingeniería Eléctrica · v13</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
@@ -166,23 +166,37 @@
     overflow:hidden;
   }
   #gameCanvas{
+    display:block;
+    flex:none;
     background:#0f231a; border:4px solid var(--border); border-radius:10px;
     box-shadow:0 10px 30px rgba(0,0,0,0.6);
     aspect-ratio:860/440;
-    width:946px;              /* tamaño base +10% respecto al original (860px) */
+    width:min(946px, 92vw, calc((100vh - 96px) * 860 / 440));
     height:auto;
-    max-width:98vw; max-height:88vh;
+    max-width:92vw;
+    max-height:calc(100vh - 96px);
+    object-fit:contain;
   }
-  /* En pantalla completa real, el canvas se estira al máximo posible
-     sin deformarse: mantiene su proporción 860:440 y "rellena" el
-     monitor (equivalente a object-fit:contain, pero funciona en
-     <canvas>, que no soporta object-fit de forma confiable). */
+  /* Fullscreen: el canvas conserva SIEMPRE 860:440 y deja respirar el
+     fondo del arcade alrededor. No se estira a 100vh ni cambia de ratio. */
   body.is-fullscreen{ width:100vw; height:100vh; overflow:hidden; }
-  body.is-fullscreen #screen-game{ width:100vw; height:100vh; gap:0; }
+  body.is-fullscreen #screen-game{
+    width:100vw; height:100vh; gap:10px;
+    background-color:var(--bg-dark);
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(108,191,58,0.10), transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cg fill='none' stroke='%23234938' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M0 40 H50 V0'/%3E%3Cpath d='M160 120 H110 V160'/%3E%3Cpath d='M0 120 H40 V80 H80'/%3E%3Cpath d='M160 40 H120 V90 H80'/%3E%3Cpath d='M80 80 V160'/%3E%3Cpath d='M80 0 V40'/%3E%3C/g%3E%3Cg fill='%232f5c45'%3E%3Ccircle cx='50' cy='40' r='4.5'/%3E%3Ccircle cx='110' cy='120' r='4.5'/%3E%3Ccircle cx='40' cy='80' r='4.5'/%3E%3Ccircle cx='120' cy='90' r='4.5'/%3E%3Ccircle cx='80' cy='80' r='4.5'/%3E%3Ccircle cx='80' cy='40' r='3.2'/%3E%3Ccircle cx='80' cy='120' r='3.2'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat:repeat;
+    background-size:auto, 160px 160px;
+  }
   body.is-fullscreen #screen-menu{ width:100vw; height:100vh; }
   body.is-fullscreen #gameCanvas{
-    width:auto; height:100vh; max-width:100vw; max-height:100vh;
-    border-radius:0; border-width:2px;
+    width:min(94vw, calc((100vh - 96px) * 860 / 440));
+    height:auto;
+    max-width:94vw;
+    max-height:calc(100vh - 96px);
+    border-radius:10px;
+    border-width:3px;
   }
   @keyframes shakeAnim{
     0%,100%{ transform:translate(0,0); }
@@ -376,41 +390,115 @@ function sfxFail(){
 function sfxMenu(){ beep(180,0.05,'triangle',0.08); }
 
 /* ============================================================
-   MÚSICA — UN solo loop chiptune persistente (generado con
-   osciladores, sin archivos externos). Arranca cuando se
-   desmutea / se desbloquea el audio, y sigue sonando de forma
-   continua durante toda la navegación (menú, juegos, niveles)
-   sin cortarse ni reiniciarse — solo el botón de silencio lo
-   detiene.
+   MÚSICA — una canción chiptune por pantalla.
+   El motor de reproducción NO se detiene al cambiar de nivel ni
+   al cambiar de juego: el tema solicitado queda pendiente y se
+   aplica al terminar la frase actual, evitando cortes bruscos.
    ============================================================ */
 let musicMuted = false;
-let musicVol = 0.05;
+let musicVol = 0.045;
 let musicTimer = null;
 let musicStep = 0;
+let musicCurrentThemeId = 'menu';
+let musicPendingThemeId = null;
 
-const THEME = {
-  tempo:205, wave:'square',
-  notes:[
-    440,0,554,660, 0,660,554,440,
-    392,0,494,587, 0,587,494,392,
-    523,659,784,659, 523,659,784,988,
-    349,415,466,415, 349,294,349,415
-  ]
+const MUSIC_THEMES = {
+  menu: {
+    tempo:180, wave:'square',
+    notes:[
+      523,659,784,659, 587,698,880,698,
+      523,659,784,988, 880,784,659,523,
+      392,523,659,784, 659,523,392,330,
+      440,554,659,880, 784,659,554,440
+    ]
+  },
+  potencias: {
+    tempo:170, wave:'square',
+    notes:[
+      330,330,494,330, 392,392,587,392,
+      440,440,659,440, 494,494,740,494,
+      330,392,494,587, 659,587,494,392,
+      330,330,392,494, 587,494,392,330
+    ]
+  },
+  telecom: {
+    tempo:190, wave:'triangle',
+    notes:[
+      262,330,392,523, 392,330,262,0,
+      294,370,440,587, 440,370,294,0,
+      330,392,494,659, 494,392,330,0,
+      262,330,392,494, 523,494,392,330
+    ]
+  },
+  computadores: {
+    tempo:155, wave:'square',
+    notes:[
+      330,330,392,330, 494,392,330,262,
+      330,392,494,587, 494,392,330,262,
+      294,294,440,294, 587,440,294,247,
+      330,392,494,659, 587,494,392,330
+    ]
+  },
+  control: {
+    tempo:205, wave:'sawtooth',
+    notes:[
+      220,262,330,392, 330,294,262,220,
+      247,294,370,440, 370,330,294,247,
+      220,277,330,440, 523,440,330,277,
+      247,294,370,494, 440,370,294,247
+    ]
+  }
 };
 
 function stopMusic(){
-  if(musicTimer){ clearInterval(musicTimer); musicTimer=null; }
+  if(musicTimer){
+    clearTimeout(musicTimer);
+    musicTimer=null;
+  }
 }
+
+function setMusicTheme(id){
+  if(!MUSIC_THEMES[id]) id='menu';
+  musicPendingThemeId = id;
+  if(!musicTimer && musicCurrentThemeId !== id){
+    musicCurrentThemeId = id;
+    musicPendingThemeId = null;
+    musicStep = 0;
+  }
+}
+
+function scheduleMusicStep(){
+  if(musicMuted || !audioCtx){
+    musicTimer=null;
+    return;
+  }
+
+  const theme = MUSIC_THEMES[musicCurrentThemeId] || MUSIC_THEMES.menu;
+  const freq = theme.notes[musicStep % theme.notes.length];
+  if(freq) beep(freq, theme.tempo/1000*0.78, theme.wave, musicVol);
+
+  musicStep++;
+  if(musicStep >= theme.notes.length){
+    musicStep = 0;
+    if(musicPendingThemeId && musicPendingThemeId !== musicCurrentThemeId){
+      musicCurrentThemeId = musicPendingThemeId;
+      musicPendingThemeId = null;
+    }
+  }
+
+  musicTimer = setTimeout(scheduleMusicStep, theme.tempo);
+}
+
 function playMusic(){
-  if(musicTimer) return; // ya está sonando: no la reiniciamos
-  if(musicMuted || !audioCtx) return;
-  musicStep = 0;
-  musicTimer = setInterval(()=>{
-    const freq = THEME.notes[musicStep % THEME.notes.length];
-    if(freq) beep(freq, THEME.tempo/1000*0.82, THEME.wave, musicVol);
-    musicStep++;
-  }, THEME.tempo);
+  if(musicTimer || musicMuted || !audioCtx) return;
+  if(musicPendingThemeId){
+    musicCurrentThemeId = musicPendingThemeId;
+    musicPendingThemeId = null;
+    musicStep = 0;
+  }
+  scheduleMusicStep();
 }
+
 function toggleMusicMute(){
   musicMuted = !musicMuted;
   const btn = document.getElementById('muteBtn');
@@ -418,6 +506,7 @@ function toggleMusicMute(){
   if(musicMuted) stopMusic();
   else playMusic();
 }
+
 
 /* small visual flash on the on-screen key badges, so the child
    sees (not just hears) that the input was registered */
@@ -552,6 +641,14 @@ const mentionOrder = ['potencias','telecom','computadores','control'];
 let menuSelection = 0; // 0..3 = cards, 4 = fullscreen button
 const MENU_ITEMS = mentionOrder.length + 1;
 let currentScreen = 'menu'; // 'menu' | one of mentionOrder
+let screenTransitioning = false;
+const GAME_IDLE_MS = 30000;
+let gameIdleTriggered = false;
+
+function resetInputState(){
+  Object.keys(prevInput).forEach(k=>{ prevInput[k]=false; rawHistory[k]=false; });
+  Object.keys(repeatTimers).forEach(k=>{ repeatTimers[k]=0; repeatWasHeld[k]=false; });
+}
 
 function renderMenuSelection(){
   cardEls.forEach((el,i)=> el.classList.toggle('selected', i===menuSelection));
@@ -562,10 +659,15 @@ renderMenuSelection();
 /* ---------- transición con fundido entre menú y minijuego ---------- */
 const fadeOverlayEl = document.getElementById('fadeOverlay');
 function fadeSwitch(doSwitch){
+  if(screenTransitioning) return;
+  screenTransitioning = true;
   fadeOverlayEl.classList.add('on');
   setTimeout(()=>{
     doSwitch();
-    requestAnimationFrame(()=> fadeOverlayEl.classList.remove('on'));
+    requestAnimationFrame(()=>{
+      fadeOverlayEl.classList.remove('on');
+      screenTransitioning = false;
+    });
   }, 170);
 }
 
@@ -606,6 +708,10 @@ function enterGame(id){
   bumpPlayCount(id);
   fadeSwitch(()=>{
     currentScreen = id;
+    gameIdleTriggered = false;
+    lastActivityTime = performance.now();
+    resetInputState();
+    setMusicTheme(id);
     screenMenu.style.display = 'none';
     screenGame.style.display = 'flex';
     controlsLine.innerHTML = games[id].controlsHint +
@@ -616,6 +722,10 @@ function enterGame(id){
 function backToMenu(){
   fadeSwitch(()=>{
     currentScreen = 'menu';
+    gameIdleTriggered = false;
+    lastActivityTime = performance.now();
+    resetInputState();
+    setMusicTheme('menu');
     screenGame.style.display = 'none';
     screenMenu.style.display = 'flex';
     renderMenuSelection();
@@ -1352,7 +1462,36 @@ const computadores = {
   rows:[[0,0],[0,1],[1,0],[1,1]],
   reset(){ this.level = 0; randomFactCache.computadores = randomFact('computadores'); this.newGate(); },
   newGate(){
-    this.gate = GATES2[Math.floor(Math.random()*GATES2.length)];
+    // Evita repetir la misma compuerta y hace que XNOR sea poco frecuente.
+    // En los primeros niveles usamos solo compuertas básicas; luego aparecen
+    // NAND/NOR y XNOR queda como desafío ocasional, no dominante.
+    let pool;
+    if(this.level < 3){
+      pool = ['AND','OR','XOR'];
+    } else if(this.level < 6){
+      pool = ['AND','OR','XOR','NAND','NOR'];
+    } else {
+      pool = ['AND','OR','XOR','NAND','NOR','XNOR'];
+    }
+
+    let next = pool[Math.floor(Math.random()*pool.length)];
+    let attempts = 0;
+    while(next===this.gate && pool.length>1 && attempts<8){
+      next = pool[Math.floor(Math.random()*pool.length)];
+      attempts++;
+    }
+
+    // XNOR aparece con una probabilidad baja desde el nivel 7 en adelante.
+    if(this.level >= 6 && next==='XNOR' && Math.random()>0.08){
+      const nonXnor = pool.filter(g=>g!=='XNOR');
+      next = nonXnor[Math.floor(Math.random()*nonXnor.length)];
+      if(next===this.gate){
+        const alternatives = nonXnor.filter(g=>g!==this.gate);
+        next = alternatives.length ? alternatives[Math.floor(Math.random()*alternatives.length)] : next;
+      }
+    }
+
+    this.gate = next;
     this.rows = [];
     for(let m=0; m<4; m++){
       const bits=[];
@@ -1361,7 +1500,8 @@ const computadores = {
     }
     this.guess = this.rows.map(()=>0);
     this.correct = this.rows.map(bits => gateTruthN(this.gate, bits));
-    this.cursor = 0; this.checked=false; this.ok=false; this.successTime=0; this.timeoutTime=0; this.demoIdx=0;
+    this.cursor = 0; this.checked=false; this.ok=false;
+    this.successTime=0; this.timeoutTime=0; this.demoIdx=0;
     this.feedback = 'COMPLETA LA TABLA Y PULSA B';
     this.timeMax = this.timeForLevel(this.level);
     this.timeLeft = this.timeMax;
@@ -1387,7 +1527,7 @@ const computadores = {
       this.guess[this.cursor] = this.guess[this.cursor]?0:1;
       this.checked=false;
     }
-    if(input.pressed.b){
+    if(input.pressed.b && !this.checked){
       this.checked = true;
       this.ok = this.guess.every((v,i)=>v===this.correct[i]);
       if(this.ok){
@@ -1665,13 +1805,23 @@ function mainLoop(){
     updateMenu(input);
     updateAttract(false, FRAME_MS);
   } else {
-    updateExitCombo(input, FRAME_MS);
-    if(input.pressed.start){
+    const idleMs = performance.now() - lastActivityTime;
+
+    // Tras ~30 s sin interacción, vuelve solo al menú para que el arcade
+    // nunca quede atrapado dentro de un minijuego abandonado.
+    if(idleMs >= GAME_IDLE_MS && !gameIdleTriggered && !screenTransitioning){
+      gameIdleTriggered = true;
+      sfxBack();
       backToMenu();
-    } else if(currentScreen!=='menu'){
-      games[currentScreen].update(input);
-      games[currentScreen].draw();
-      updateAndDrawConfetti(FRAME_MS/1000);
+    } else if(!screenTransitioning){
+      updateExitCombo(input, FRAME_MS);
+      if(input.pressed.start){
+        backToMenu();
+      } else if(currentScreen!=='menu'){
+        games[currentScreen].update(input);
+        games[currentScreen].draw();
+        updateAndDrawConfetti(FRAME_MS/1000);
+      }
     }
   }
   requestAnimationFrame(mainLoop);
