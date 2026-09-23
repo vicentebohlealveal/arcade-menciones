@@ -19,7 +19,7 @@
     --green-dark:#3f7a1f;
     --amber:#ffcc00;
     --c-potencias:#ffcc00;
-    --c-telecom:#00e5ff;
+    --c-telecomunicaciones:#00e5ff;
     --c-computadores:#5eff8f;
     --c-control:#ff6b3d;
   }
@@ -113,7 +113,7 @@
   }
   .card.selected .name{ color:#fff; }
   .card[data-mencion="potencias"]{ --sel-color:var(--c-potencias); }
-  .card[data-mencion="telecom"]{ --sel-color:var(--c-telecom); }
+  .card[data-mencion="telecomunicaciones"]{ --sel-color:var(--c-telecomunicaciones); }
   .card[data-mencion="computadores"]{ --sel-color:var(--c-computadores); }
   .card[data-mencion="control"]{ --sel-color:var(--c-control); }
 
@@ -153,6 +153,7 @@
     background:conic-gradient(#5eff8f calc(var(--p,0)*1%), rgba(255,255,255,0.08) 0);
     display:none; align-items:center; justify-content:center;
   }
+  #exitRing.ready::after{ content:'SUELTA'; }
   #exitRing::after{
     content:'MENÚ'; width:36px; height:36px; border-radius:50%; background:#0a1712;
     color:#dff2e6; font-family:'Press Start 2P',monospace; font-size:7px;
@@ -254,6 +255,80 @@
     font-family:'VT323',monospace; font-size:16.8px; color:#dff2e6;
     opacity:0.3; pointer-events:none; user-select:none;
   }
+
+  /* ---------- ayudas de feria / presentación ---------- */
+  #gameIntro{
+    position:fixed; inset:0; z-index:85; display:none; align-items:center; justify-content:center;
+    background:rgba(5,11,9,0.86); pointer-events:none;
+  }
+  #gameIntro .intro-card{
+    min-width:min(760px,86vw); max-width:860px; padding:28px 34px; text-align:center;
+    border:4px solid var(--intro-color,#5eff8f); border-radius:12px;
+    background:linear-gradient(160deg,rgba(15,35,26,.98),rgba(6,18,13,.98));
+    box-shadow:0 0 0 3px rgba(255,255,255,.06),0 0 42px var(--intro-color,#5eff8f);
+  }
+  #gameIntro .intro-code{ font:12px 'Press Start 2P'; color:#8fb39a; margin-bottom:15px; }
+  #gameIntro .intro-title{ font:28px 'Press Start 2P'; color:#fff; line-height:1.35; }
+  #gameIntro .intro-sub{ margin-top:13px; font:23px 'VT323'; color:#b9d5c1; }
+  #gameIntro.show{ display:flex; animation:introIn .22s ease-out forwards; }
+  @keyframes introIn{ from{opacity:0} to{opacity:1} }
+
+  #idleWarning{
+    position:fixed; left:50%; bottom:86px; transform:translateX(-50%); z-index:79; display:none;
+    min-width:360px; max-width:82vw; padding:10px 18px; text-align:center;
+    border:3px solid #ffcc55; border-radius:9px; background:rgba(20,18,8,.94);
+    color:#ffe98a; box-shadow:0 0 24px rgba(255,204,85,.25);
+    font:21px 'VT323';
+  }
+  #idleWarning.show{ display:block; animation:warningPulse .8s ease-in-out infinite; }
+  @keyframes warningPulse{ 0%,100%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.02)} }
+
+  #attractDemo{
+    display:none; width:min(900px,92vw); min-height:138px; padding:16px 20px;
+    border:3px solid var(--demo-color,#5eff8f); border-radius:10px;
+    background:linear-gradient(160deg,rgba(15,35,26,.96),rgba(8,20,14,.96));
+    box-shadow:0 0 28px var(--demo-color,#5eff8f);
+  }
+  #attractDemo.show{ display:block; animation:demoIn .25s ease-out; }
+  @keyframes demoIn{ from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)} }
+  .demo-head{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; }
+  .demo-title{ font:14px 'Press Start 2P'; color:#fff; }
+  .demo-sub{ font:19px 'VT323'; color:#a7c4b0; text-align:right; }
+  .demo-steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:13px; }
+  .demo-step{ padding:10px 8px; border:2px solid rgba(255,255,255,.12); border-radius:7px; text-align:center; min-height:54px; }
+  .demo-key{ display:inline-flex; min-width:30px; height:30px; align-items:center; justify-content:center; margin-bottom:5px;
+    border:2px solid #5eff8f; border-radius:6px; color:#fff; font:12px 'Press Start 2P'; }
+  .demo-step span{ display:block; font:18px 'VT323'; color:#dff2e6; }
+  .demo-note{ margin-top:9px; text-align:center; font:17px 'VT323'; color:#ffe98a; }
+
+  #controls-line{
+    width:min(920px,94vw); font-size:20px; color:var(--text-dim); text-align:center;
+    max-width:920px; background:var(--bg-panel); border:3px solid var(--border-soft); border-radius:9px;
+    padding:9px 14px; margin:0; line-height:1.35;
+    min-height:44px;
+  }
+  #controls-line .controls-prefix{ color:#fff; margin-right:10px; letter-spacing:1px; }
+  #controls-line .kb{ width:28px; height:28px; font-size:12px; vertical-align:-7px; }
+  #controls-line .kb-active{ transform:scale(1.18); }
+
+  .finish-card{
+    position:fixed; inset:0; z-index:86; display:none; align-items:center; justify-content:center;
+    background:rgba(5,11,9,.82); pointer-events:none;
+  }
+  .finish-card.show{ display:flex; }
+  .finish-inner{ width:min(700px,86vw); padding:30px; text-align:center; border:4px solid #ffe98a;
+    border-radius:12px; background:linear-gradient(160deg,rgba(15,35,26,.98),rgba(6,18,13,.98));
+    box-shadow:0 0 50px rgba(255,233,138,.32); }
+  .finish-title{ font:28px 'Press Start 2P'; color:#ffe98a; line-height:1.4; }
+  .finish-sub{ margin-top:14px; font:23px 'VT323'; color:#e6f4ea; }
+  .finish-next{ margin-top:18px; font:17px 'VT323'; color:#8fb39a; }
+  @media (max-height:700px){
+    #screen-menu{ gap:18px; }
+    .card{ height:210px; padding:14px 12px; }
+    .card .icon{ width:54px; height:54px; margin-bottom:10px; }
+    #attractDemo{ min-height:118px; padding:10px 14px; }
+    .demo-step{ min-height:44px; }
+  }
 </style>
 </head>
 <body>
@@ -265,10 +340,25 @@
 <div id="exitRing" style="--p:0"></div>
 <div id="vba-mark">VBA</div>
 <div id="fadeOverlay"></div>
+<div id="gameIntro">
+  <div class="intro-card">
+    <div class="intro-code" id="introCode">MENCIÓN 01</div>
+    <div class="intro-title" id="introTitle">POTENCIAS Y CIRCUITOS</div>
+    <div class="intro-sub" id="introSub">Conecta la energía</div>
+  </div>
+</div>
+<div id="idleWarning"></div>
+<div class="finish-card" id="finishCard">
+  <div class="finish-inner">
+    <div class="finish-title" id="finishTitle">¡MÁQUINA DOMINADA!</div>
+    <div class="finish-sub" id="finishSub">Has completado esta mención.</div>
+    <div class="finish-next">Preparando el menú…</div>
+  </div>
+</div>
 <div id="statsPanel">
   <h3>📊 ESTADÍSTICAS DE LA JORNADA</h3>
   <div class="row"><span>Potencias</span><span id="st-potencias">0</span></div>
-  <div class="row"><span>Telecom</span><span id="st-telecom">0</span></div>
+  <div class="row"><span>Telecom</span><span id="st-telecomunicaciones">0</span></div>
   <div class="row"><span>Computadores</span><span id="st-computadores">0</span></div>
   <div class="row"><span>Control</span><span id="st-control">0</span></div>
   <div class="row"><b>TOTAL</b><b id="st-total">0</b></div>
@@ -296,7 +386,7 @@
       <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z" fill="#ffcc00"/></svg>
       <div class="name pixel">POTENCIAS<br>Y CIRCUITOS</div>
     </div>
-    <div class="card" data-mencion="telecom">
+    <div class="card" data-mencion="telecomunicaciones">
       <span class="code pixel">02</span>
       <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M2 12c3-6 7-6 10 0s7 6 10 0" stroke="#00e5ff" stroke-width="2.4" fill="none"/></svg>
       <div class="name pixel">TELECOMUNI-<br>CACIONES</div>
@@ -323,6 +413,14 @@
     <span class="kb a" data-key="a">A</span> entrar
   </p>
   <p id="attractHint">🕹️ ¡TOCA UN BOTÓN PARA JUGAR! 🕹️</p>
+  <div id="attractDemo">
+    <div class="demo-head">
+      <div class="demo-title" id="demoTitle">CÓMO SE JUEGA</div>
+      <div class="demo-sub" id="demoSub">POTENCIAS Y CIRCUITOS</div>
+    </div>
+    <div class="demo-steps" id="demoSteps"></div>
+    <div class="demo-note" id="demoNote"></div>
+  </div>
   <div id="credits-mark">Proyecto de difusión · Mención ELO · Ingeniería Civil Electrónica USM</div>
 </div>
 
@@ -421,7 +519,7 @@ const MUSIC_THEMES = {
       330,330,392,494, 587,494,392,330
     ]
   },
-  telecom: {
+  telecomunicaciones: {
     tempo:190, wave:'triangle',
     notes:[
       262,330,392,523, 392,330,262,0,
@@ -582,7 +680,15 @@ function readInput(){
   if(pressed.a){ flashBadge('a'); sfxConfirm(); }
   if(pressed.b){ flashBadge('b'); sfxBack(); }
 
-  if(Object.values(debounced).some(v=>v)) lastActivityTime = performance.now();
+  if(Object.values(debounced).some(v=>v)){
+    lastActivityTime = performance.now();
+    if(currentScreen==='menu' && attractOn){
+      attractOn=false;
+      document.getElementById('attractHint').style.display='none';
+      attractDemoEl.classList.remove('show');
+      document.getElementById('cards').classList.remove('attract-mode');
+    }
+  }
 
   return {held:debounced, pressed:pressed};
 }
@@ -637,17 +743,23 @@ const ctx = canvas.getContext('2d');
 const fsBtnEl = document.getElementById('fsBtn');
 
 const cardEls = Array.from(document.querySelectorAll('.card'));
-const mentionOrder = ['potencias','telecom','computadores','control'];
+const mentionOrder = ['potencias','telecomunicaciones','computadores','control'];
 let menuSelection = 0; // 0..3 = cards, 4 = fullscreen button
 const MENU_ITEMS = mentionOrder.length + 1;
 let currentScreen = 'menu'; // 'menu' | one of mentionOrder
 let screenTransitioning = false;
+const GAME_IDLE_WARNING_MS = 25000;
 const GAME_IDLE_MS = 30000;
 let gameIdleTriggered = false;
+let gameIdleWarningShown = false;
+let gameFinishActive = false;
+let gameFinishTimer = null;
+let gameIntroTimer = null;
 
 function resetInputState(){
   Object.keys(prevInput).forEach(k=>{ prevInput[k]=false; rawHistory[k]=false; });
   Object.keys(repeatTimers).forEach(k=>{ repeatTimers[k]=0; repeatWasHeld[k]=false; });
+  exitHoldMs = 0; exitReady = false;
 }
 
 function renderMenuSelection(){
@@ -669,6 +781,74 @@ function fadeSwitch(doSwitch){
       screenTransitioning = false;
     });
   }, 170);
+}
+
+const GAME_PRESENTATION = {
+  potencias:{code:'MENCIÓN 01', title:'POTENCIAS Y CIRCUITOS', sub:'Lleva la energía desde el generador hasta la carga', color:'#ffcc00'},
+  telecomunicaciones:{code:'MENCIÓN 02', title:'TELECOMUNICACIONES', sub:'Sintoniza la señal hasta hacerla coincidir', color:'#00e5ff'},
+  computadores:{code:'MENCIÓN 03', title:'COMPUTADORES', sub:'Descubre cómo las compuertas convierten 0 y 1 en decisiones', color:'#5eff8f'},
+  control:{code:'MENCIÓN 04', title:'CONTROL AUTOMÁTICO', sub:'Ajusta el controlador hasta estabilizar el sistema', color:'#ff6b3d'}
+};
+
+const LEARNINGS = {
+  potencias:'Esto representa cómo se puede enrutar energía eléctrica por un circuito.',
+  telecomunicaciones:'Esto representa ajustar una señal para que transporte información.',
+  computadores:'Esto representa cómo las compuertas lógicas procesan información digital.',
+  control:'Esto representa cómo un controlador busca mantener un sistema estable.'
+};
+
+const ATTRACT_DEMOS = {
+  potencias:{title:'POTENCIAS Y CIRCUITOS', sub:'Conecta energía', steps:[['◀ ▲ ▼ ▶','MOVER'],['A','ROTAR'],['B','CAMBIAR PIEZA']], note:'Objetivo: unir ⚡ con 💡'},
+  telecomunicaciones:{title:'TELECOMUNICACIONES', sub:'Sintoniza la señal', steps:[['◀ ▶','FRECUENCIA'],['▲ ▼','AMPLITUD'],['B','NUEVA SEÑAL']], note:'Objetivo: hacer coincidir ambas ondas'},
+  computadores:{title:'COMPUTADORES', sub:'Completa la lógica', steps:[['▲ ▼','ELEGIR FILA'],['A','CAMBIAR 0 / 1'],['B','REVISAR']], note:'Objetivo: completar la tabla de verdad'},
+  control:{title:'CONTROL AUTOMÁTICO', sub:'Estabiliza el sistema', steps:[['◀ ▶','ELEGIR PERILLA'],['▲ ▼','AJUSTAR'],['','MANTENER HASTA VERDE']], note:'Objetivo: dejar Kp, Ki y Kd dentro de la zona objetivo'}
+};
+
+const attractDemoEl = document.getElementById('attractDemo');
+function renderAttractDemo(id){
+  const d = ATTRACT_DEMOS[id] || ATTRACT_DEMOS.potencias;
+  const p = GAME_PRESENTATION[id] || GAME_PRESENTATION.potencias;
+  attractDemoEl.style.setProperty('--demo-color', p.color);
+  document.getElementById('demoTitle').textContent = d.title;
+  document.getElementById('demoSub').textContent = d.sub;
+  document.getElementById('demoNote').textContent = d.note;
+  document.getElementById('demoSteps').innerHTML = d.steps.map(([key,label])=>
+    '<div class=\"demo-step\">'+(key?'<div class=\"demo-key\">'+key+'</div>':'')+'<span>'+label+'</span></div>'
+  ).join('');
+}
+
+function showGameIntro(id){
+  const p = GAME_PRESENTATION[id] || GAME_PRESENTATION.potencias;
+  const el = document.getElementById('gameIntro');
+  el.style.setProperty('--intro-color', p.color);
+  document.getElementById('introCode').textContent = p.code;
+  document.getElementById('introTitle').textContent = p.title;
+  document.getElementById('introSub').textContent = p.sub;
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+  clearTimeout(gameIntroTimer);
+  gameIntroTimer = setTimeout(()=> el.classList.remove('show'), 900);
+}
+
+function showIdleWarning(secondsLeft){
+  const el = document.getElementById('idleWarning');
+  el.textContent = '¿SIGUES AHÍ?  ·  VOLVIENDO AL MENÚ EN '+secondsLeft;
+  el.classList.add('show');
+}
+function hideIdleWarning(){ document.getElementById('idleWarning').classList.remove('show'); }
+
+function showGameFinished(id){
+  if(gameFinishActive) return;
+  gameFinishActive = true;
+  const p = GAME_PRESENTATION[id] || GAME_PRESENTATION.potencias;
+  document.getElementById('finishTitle').textContent = '¡'+p.title+' DOMINADO!';
+  document.getElementById('finishSub').textContent = LEARNINGS[id] || 'Has completado esta mención.';
+  document.getElementById('finishCard').classList.add('show');
+  clearTimeout(gameFinishTimer);
+  gameFinishTimer = setTimeout(()=>{
+    document.getElementById('finishCard').classList.remove('show');
+    gameFinishActive = false;
+    if(currentScreen!=='menu') backToMenu();
+  }, 2600);
 }
 
 /* ---------- contador de partidas jugadas (persiste en este navegador) ---------- */
@@ -709,20 +889,32 @@ function enterGame(id){
   fadeSwitch(()=>{
     currentScreen = id;
     gameIdleTriggered = false;
+    gameIdleWarningShown = false;
+    hideIdleWarning();
     lastActivityTime = performance.now();
     resetInputState();
     setMusicTheme(id);
+    attractOn = false;
+    document.getElementById('attractHint').style.display = 'none';
+    attractDemoEl.classList.remove('show');
+    document.getElementById('cards').classList.remove('attract-mode');
     screenMenu.style.display = 'none';
     screenGame.style.display = 'flex';
-    controlsLine.innerHTML = games[id].controlsHint +
-      ' &nbsp;·&nbsp; mantén <span class="kb b" data-key="b">B</span> → menú';
+    controlsLine.innerHTML = '<span class="controls-prefix pixel">CONTROLES</span> '+games[id].controlsHint +
+      ' &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> menú';
     games[id].reset();
+    showGameIntro(id);
   });
 }
 function backToMenu(){
   fadeSwitch(()=>{
     currentScreen = 'menu';
     gameIdleTriggered = false;
+    gameIdleWarningShown = false;
+    hideIdleWarning();
+    gameFinishActive = false;
+    clearTimeout(gameFinishTimer);
+    document.getElementById('finishCard').classList.remove('show');
     lastActivityTime = performance.now();
     resetInputState();
     setMusicTheme('menu');
@@ -752,18 +944,23 @@ function updateAttract(idleForGame, dtMs){
   if(currentScreen==='menu' && idleMs > IDLE_ATTRACT_MS){
     if(!attractOn){
       attractOn = true;
+      attractTimer = 0;
       document.getElementById('attractHint').style.display = 'block';
+      attractDemoEl.classList.add('show');
       document.getElementById('cards').classList.add('attract-mode');
+      renderAttractDemo(mentionOrder[menuSelection % mentionOrder.length]);
     }
     attractTimer += dtMs;
-    if(attractTimer > 1050){
+    if(attractTimer > 4200){
       attractTimer = 0;
       menuSelection = (menuSelection+1) % mentionOrder.length;
       renderMenuSelection();
+      renderAttractDemo(mentionOrder[menuSelection]);
     }
   } else if(attractOn){
     attractOn = false;
     document.getElementById('attractHint').style.display = 'none';
+    attractDemoEl.classList.remove('show');
     document.getElementById('cards').classList.remove('attract-mode');
   }
 }
@@ -858,7 +1055,7 @@ function drawTimerBar(timeLeft, timeMax, y){
   ctx.fillStyle = pct>0.3 ? '#5eff8f' : '#ff6b6b';
   ctx.fillRect(17,y+3, 826*pct, 10);
 }
-function flashSuccess(t,color,age){
+function flashSuccess(t,color,age,sub){
   age = age===undefined ? 1 : age;
   // destello de color breve sobre toda la pantalla (se apaga rápido)
   const flashA = Math.max(0, 0.22*(1-age/0.25));
@@ -877,6 +1074,12 @@ function flashSuccess(t,color,age){
   ctx.fillStyle = color;
   ctx.shadowColor = color; ctx.shadowBlur = 22;
   ctx.fillText(t, 0, 0);
+  if(sub){
+    ctx.shadowBlur=0;
+    ctx.font = "19px 'VT323'";
+    ctx.fillStyle='#e6f4ea';
+    ctx.fillText(sub,0,34);
+  }
   ctx.restore();
 }
 function pulseCircle(x,y,r,color){
@@ -1044,7 +1247,7 @@ const FACTS = {
     'Un panel solar transforma luz en electricidad sin partes móviles.',
     'La primera red eléctrica pública se instaló en 1882, en Nueva York.'
   ],
-  telecom: [
+  telecomunicaciones: [
     'El WiFi de tu casa viaja como ondas de radio, igual que esta señal.',
     'Las fibras ópticas envían información usando pulsos de luz.',
     'La primera llamada telefónica fue hecha por Graham Bell en 1876.',
@@ -1106,35 +1309,70 @@ const potencias = {
     this.setupLevel();
   },
   setupLevel(){
-    const def = POWER_LEVELS[this.level % POWER_LEVELS.length];
+    const def = POWER_LEVELS[Math.min(this.level, POWER_LEVELS.length-1)];
     this.def = def;
-    const randomGrid = () => {
-      const g = [];
-      for(let r=0;r<def.rows;r++){
-        const row=[];
-        for(let c=0;c<def.cols;c++){
-          row.push({type:PIECE_TYPES[Math.floor(Math.random()*4)], rot:Math.floor(Math.random()*4)});
+
+    const pieceFromConns = (conns) => {
+      for(const type of ['straight','corner','tee','cross']){
+        for(let rot=0;rot<4;rot++) {
+          const a = SHAPES[type].map(d=>(d+rot)%4).sort((x,y)=>x-y);
+          const b = conns.slice().sort((x,y)=>x-y);
+          if(a.length===b.length && a.every((v,i)=>v===b[i])) return {type,rot:Math.floor(Math.random()*4)};
         }
-        g.push(row);
       }
-      return g;
+      return {type:'straight',rot:Math.floor(Math.random()*4)};
     };
-    // Generamos tableros al azar hasta encontrar uno que NO esté ya
-    // resuelto de entrada (evita que el nivel "se pase solo" apenas
-    // empieza, algo que pasaba de vez en cuando con el azar puro).
-    let tries = 0;
-    do {
-      this.grid = randomGrid();
-      tries++;
-    } while (this.checkConnectivity() && tries < 60);
-    if(this.checkConnectivity()){
-      // último recurso: forzamos que la celda pegada al generador
-      // no apunte hacia la derecha, para cortar el camino a mano.
-      const bc = this.def.source.c+1, br = this.def.source.r;
-      if(bc < def.cols){
-        const cell = this.grid[br][bc];
-        cell.type='corner'; cell.rot = (cell.rot+1)%4;
+
+    // Construye un camino válido generador->carga y luego desordena las piezas.
+    // Así el nivel siempre tiene solución y nunca comienza conectado por azar.
+    const buildPath = () => {
+      const path=[]; let c=def.source.c, r=def.source.r; path.push([c,r]);
+      while(c!==def.target.c || r!==def.target.r){
+        const moves=[];
+        if(c<def.target.c) moves.push('R');
+        if(r<def.target.r) moves.push('D');
+        if(r>def.target.r) moves.push('U');
+        const m=moves[Math.floor(Math.random()*moves.length)];
+        if(m==='R') c++; else if(m==='D') r++; else r--;
+        path.push([c,r]);
       }
+      return path;
+    };
+
+    const path = buildPath();
+    const pathSet = new Set(path.map(([c,r])=>c+','+r));
+    const g=[];
+    const difficulty = Math.min(1, this.level/3);
+    for(let r=0;r<def.rows;r++){
+      const row=[];
+      for(let c=0;c<def.cols;c++){
+        const key=c+','+r;
+        if(pathSet.has(key) && !(c===def.source.c&&r===def.source.r) && !(c===def.target.c&&r===def.target.r)){
+          const idx=path.findIndex(p=>p[0]===c&&p[1]===r);
+          const prev=path[idx-1], next=path[idx+1];
+          const conns=[];
+          if(prev[0]===c && prev[1]===r-1) conns.push(0);
+          if(next[0]===c && next[1]===r-1) conns.push(0);
+          if(prev[0]===c && prev[1]===r+1) conns.push(2);
+          if(next[0]===c && next[1]===r+1) conns.push(2);
+          if(prev[0]===c-1 && prev[1]===r) conns.push(3);
+          if(next[0]===c-1 && next[1]===r) conns.push(3);
+          if(prev[0]===c+1 && prev[1]===r) conns.push(1);
+          if(next[0]===c+1 && next[1]===r) conns.push(1);
+          const piece=pieceFromConns(conns); piece.rot=(piece.rot+1+Math.floor(Math.random()*3))%4; row.push(piece);
+        } else {
+          const pool = difficulty<0.34 ? ['straight','corner','corner','tee'] : difficulty<0.67 ? ['straight','corner','tee','tee'] : ['straight','corner','tee','cross'];
+          row.push({type:pool[Math.floor(Math.random()*pool.length)],rot:Math.floor(Math.random()*4)});
+        }
+      }
+      g.push(row);
+    }
+    this.grid=g;
+    // Si una combinación azarosa conectara igual la ruta, la giramos y reintentamos.
+    let tries=0;
+    while(this.checkConnectivity() && tries<12){
+      for(const [c,r] of path.slice(1,-1)) this.grid[r][c].rot=(this.grid[r][c].rot+1)%4;
+      tries++;
     }
     this.energyPath = null;
     this.cur = {c:1, r:Math.floor(def.rows/2)};
@@ -1258,7 +1496,7 @@ const potencias = {
   },
   draw(){
     bg();
-    drawHeader('MENCIÓN 01 · POTENCIAS Y CIRCUITOS · NIVEL '+(this.level+1),'#ffcc00',
+    drawHeader('MENCIÓN 01 · POTENCIAS Y CIRCUITOS · NIVEL '+(this.level+1)+'/5','#ffcc00',
       'Conecta la energía desde el generador ⚡ hasta la carga 💡', 'potencias');
     drawTimerBar(this.timeLeft, this.timeMax);
     const def = this.def;
@@ -1330,7 +1568,7 @@ const potencias = {
     }
 
     if(this.successTime>0.05){
-      flashSuccess('¡ENERGÍA ENTREGADA!', '#5eff8f', 2.1-this.successTime);
+      flashSuccess('¡ENERGÍA ENTREGADA!', '#5eff8f', 2.1-this.successTime, LEARNINGS.potencias);
     }
     if(this.timeoutTime>0.05){
       flashSuccess('¡SE ACABÓ EL TIEMPO!', '#ff6b6b', 1.3-this.timeoutTime);
@@ -1345,14 +1583,14 @@ const potencias = {
    GAME 2 — TELECOMUNICACIONES
    ◀▶ ajustan la frecuencia · ▲▼ ajustan la amplitud
    ============================================================ */
-const telecom = {
+const telecomunicaciones = {
   level:0, freq:2, amp:0.5, targetFreq:3, targetAmp:0.7, successTime:0, timeoutTime:0,
   timeLeft:0, timeMax:0, matched:false,
   timeForLevel(level){ return Math.max(9, 24 - level*2); },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> frecuencia &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> amplitud &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> nueva señal',
   reset(){
     this.level = 0; this.freq = 2; this.amp = 0.5;
-    randomFactCache.telecom = randomFact('telecom');
+    randomFactCache.telecomunicaciones = randomFact('telecomunicaciones');
     this.newTarget();
   },
   newTarget(){
@@ -1365,7 +1603,10 @@ const telecom = {
   update(input){
     if(this.successTime>0){
       this.successTime -= 1/60;
-      if(this.successTime<=0){ this.level = this.level+1; this.newTarget(); }
+      if(this.successTime<=0){
+        if(this.level>=4) showGameFinished('telecomunicaciones');
+        else { this.level = this.level+1; this.newTarget(); }
+      }
       return;
     }
     if(this.timeoutTime>0){
@@ -1383,7 +1624,7 @@ const telecom = {
     const closeAmp  = Math.abs(this.amp-this.targetAmp) < 0.07;
     if(closeFreq && closeAmp){
       this.matched=true; this.successTime = 1.4;
-      sfxSuccess(); triggerShake(); randomFactCache.telecom = randomFact('telecom');
+      sfxSuccess(); triggerShake(); randomFactCache.telecomunicaciones = randomFact('telecomunicaciones');
       spawnConfetti(canvas.width/2, 150);
     } else {
       this.timeLeft -= 1/60;
@@ -1392,8 +1633,8 @@ const telecom = {
   },
   draw(){
     bg();
-    drawHeader('MENCIÓN 02 · TELECOMUNICACIONES · NIVEL '+(this.level+1),'#00e5ff',
-      'Sintoniza tu señal (cian) hasta calzar con la señal objetivo (gris)', 'telecom');
+    drawHeader('MENCIÓN 02 · TELECOMUNICACIONES · NIVEL '+(this.level+1)+'/5','#00e5ff',
+      'Sintoniza tu señal (cian) hasta calzar con la señal objetivo (gris)', 'telecomunicaciones');
     drawTimerBar(this.timeLeft, this.timeMax);
 
     panel(40,100,780,230,'#1b4a55','rgba(6,20,24,0.7)',10);
@@ -1427,7 +1668,7 @@ const telecom = {
     text((this.amp*100).toFixed(0)+' %',450,398,22,'#00e5ff','Press Start 2P');
 
     if(this.successTime>0.05){
-      flashSuccess('¡SEÑAL CAPTURADA!', '#5eff8f', 1.4-this.successTime);
+      flashSuccess('¡SEÑAL CAPTURADA!', '#5eff8f', 1.4-this.successTime, LEARNINGS.telecomunicaciones);
     }
     if(this.timeoutTime>0.05){
       flashSuccess('¡SE ACABÓ EL TIEMPO!', '#ff6b6b', 1.3-this.timeoutTime);
@@ -1456,41 +1697,31 @@ function gateTruthN(g,bits){
 }
 const computadores = {
   level:0, inputs:2, gate:'AND', guess:[0,0,0,0], correct:null, cursor:0, checked:false, ok:false,
-  successTime:0, timeoutTime:0, timeLeft:0, timeMax:0, demoIdx:0, demoTimer:0, feedback:'',
-  timeForLevel(level){ return Math.max(14, 34 - level*3); },
+  successTime:0, timeoutTime:0, timeLeft:0, timeMax:0, demoIdx:0, demoTimer:0, feedback:'', hasEdited:false, gateHistory:[],
+  timeForLevel(level){ return Math.max(18, 38 - level*2); },
   controlsHint:'<span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> elegir fila &nbsp;·&nbsp; <span class="kb a" data-key="a">A</span> cambia 0/1 &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> revisar',
   rows:[[0,0],[0,1],[1,0],[1,1]],
-  reset(){ this.level = 0; randomFactCache.computadores = randomFact('computadores'); this.newGate(); },
+  reset(){ this.level = 0; this.gateHistory=[]; randomFactCache.computadores = randomFact('computadores'); this.newGate(); },
   newGate(){
-    // Evita repetir la misma compuerta y hace que XNOR sea poco frecuente.
-    // En los primeros niveles usamos solo compuertas básicas; luego aparecen
-    // NAND/NOR y XNOR queda como desafío ocasional, no dominante.
     let pool;
-    if(this.level < 3){
-      pool = ['AND','OR','XOR'];
-    } else if(this.level < 6){
-      pool = ['AND','OR','XOR','NAND','NOR'];
-    } else {
-      pool = ['AND','OR','XOR','NAND','NOR','XNOR'];
+    if(this.level < 2) pool = ['AND','OR'];
+    else if(this.level < 4) pool = ['AND','OR','XOR'];
+    else if(this.level < 7) pool = ['AND','OR','XOR','NAND','NOR'];
+    else pool = ['AND','OR','XOR','NAND','NOR','XNOR'];
+
+    let candidates = pool.filter(g=>!this.gateHistory.slice(-2).includes(g));
+    if(!candidates.length) candidates = pool.filter(g=>g!==this.gate || pool.length===1);
+    if(!candidates.length) candidates = pool.slice();
+    let next = candidates[Math.floor(Math.random()*candidates.length)];
+
+    // XNOR es una aparición ocasional, no una compuerta dominante.
+    if(this.level >= 7 && next==='XNOR' && Math.random()>0.07){
+      const nonXnor = candidates.filter(g=>g!=='XNOR');
+      next = nonXnor.length ? nonXnor[Math.floor(Math.random()*nonXnor.length)] : next;
     }
 
-    let next = pool[Math.floor(Math.random()*pool.length)];
-    let attempts = 0;
-    while(next===this.gate && pool.length>1 && attempts<8){
-      next = pool[Math.floor(Math.random()*pool.length)];
-      attempts++;
-    }
-
-    // XNOR aparece con una probabilidad baja desde el nivel 7 en adelante.
-    if(this.level >= 6 && next==='XNOR' && Math.random()>0.08){
-      const nonXnor = pool.filter(g=>g!=='XNOR');
-      next = nonXnor[Math.floor(Math.random()*nonXnor.length)];
-      if(next===this.gate){
-        const alternatives = nonXnor.filter(g=>g!==this.gate);
-        next = alternatives.length ? alternatives[Math.floor(Math.random()*alternatives.length)] : next;
-      }
-    }
-
+    this.gateHistory.push(next);
+    if(this.gateHistory.length>4) this.gateHistory.shift();
     this.gate = next;
     this.rows = [];
     for(let m=0; m<4; m++){
@@ -1500,7 +1731,7 @@ const computadores = {
     }
     this.guess = this.rows.map(()=>0);
     this.correct = this.rows.map(bits => gateTruthN(this.gate, bits));
-    this.cursor = 0; this.checked=false; this.ok=false;
+    this.cursor = 0; this.checked=false; this.ok=false; this.hasEdited=false;
     this.successTime=0; this.timeoutTime=0; this.demoIdx=0;
     this.feedback = 'COMPLETA LA TABLA Y PULSA B';
     this.timeMax = this.timeForLevel(this.level);
@@ -1509,7 +1740,10 @@ const computadores = {
   update(input){
     if(this.successTime>0){
       this.successTime -= 1/60;
-      if(this.successTime<=0){ this.level = this.level+1; this.newGate(); }
+      if(this.successTime<=0){
+        if(this.level>=4) showGameFinished('computadores');
+        else { this.level = this.level+1; this.newGate(); }
+      }
       return;
     }
     if(this.timeoutTime>0){
@@ -1526,8 +1760,9 @@ const computadores = {
     if(input.pressed.a){
       this.guess[this.cursor] = this.guess[this.cursor]?0:1;
       this.checked=false;
+      this.hasEdited=true;
     }
-    if(input.pressed.b && !this.checked){
+    if(input.pressed.b && !this.checked && this.hasEdited){
       this.checked = true;
       this.ok = this.guess.every((v,i)=>v===this.correct[i]);
       if(this.ok){
@@ -1536,6 +1771,8 @@ const computadores = {
         sfxSuccess(); triggerShake();
         spawnConfetti(canvas.width/2, 150);
       } else { this.feedback = 'REVISA LAS FILAS EN ROJO'; sfxFail(); }
+    } else if(input.pressed.b && !this.hasEdited && !this.checked){
+      this.feedback = 'PRIMERO CAMBIA AL MENOS UNA FILA'; sfxConfirm();
     } else if(!this.checked){
       this.timeLeft -= 1/60;
       if(this.timeLeft<=0){ this.timeoutTime = 1.3; sfxFail(); triggerShake(); }
@@ -1599,7 +1836,7 @@ const computadores = {
   },
   draw(){
     bg();
-    drawHeader('MENCIÓN 03 · COMPUTADORES · NIVEL '+(this.level+1),'#5eff8f',
+    drawHeader('MENCIÓN 03 · COMPUTADORES · NIVEL '+(this.level+1)+'/5','#5eff8f',
       'Mira el ejemplo y luego completa la tabla de verdad', 'computadores');
     drawTimerBar(this.timeLeft, this.timeMax);
 
@@ -1641,7 +1878,7 @@ const computadores = {
     }
     text(this.feedback, 620, 415, 15, this.ok?'#5eff8f':'#ffcc55','Press Start 2P','center');
 
-    if(this.successTime>0.05) flashSuccess('¡LÓGICA VALIDADA!', '#5eff8f', 1.4-this.successTime);
+    if(this.successTime>0.05) flashSuccess('¡LÓGICA VALIDADA!', '#5eff8f', 1.4-this.successTime, LEARNINGS.computadores);
     if(this.timeoutTime>0.05){
       flashSuccess('¡SE ACABÓ EL TIEMPO!', '#ff6b6b', 1.3-this.timeoutTime);
     }
@@ -1658,7 +1895,7 @@ const control = {
   dials:null, sel:0, timeLeft:10, timeMax:13, round:1, tol:12, inZoneTime:0,
   state:'play', // 'play' | 'success' | 'fail'
   stateTime:0, holdTime:0, lastDir:null,
-  timeForRound(round){ return Math.max(7, 13 - (round-1)*0.8); },
+  timeForRound(round){ return Math.max(10, 14 - (round-1)*0.45); },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> elegir perilla &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> ajustar (mantén presionado para ir más rápido)',
   info:{
     Kp:'Reacciona según qué tan grande es el error AHORA MISMO.',
@@ -1666,7 +1903,7 @@ const control = {
     Kd:'Anticipa hacia dónde va el error y frena antes de pasarse.'
   },
   reset(){
-    this.round = 1; this.tol = 16;
+    this.round = 1; this.tol = 18;
     randomFactCache.control = randomFact('control');
     this.newRound();
   },
@@ -1685,8 +1922,11 @@ const control = {
     if(this.state!=='play'){
       this.stateTime -= 1/60;
       if(this.stateTime<=0){
-        if(this.state==='success'){ this.round++; this.tol = Math.max(9,this.tol-1); }
-        else { this.tol = 16; this.round=1; }
+        if(this.state==='success'){
+          if(this.round>=5){ showGameFinished('control'); return; }
+          this.round++; this.tol = Math.max(12,this.tol-1);
+        }
+        else { this.tol = 18; this.round=1; }
         this.newRound();
       }
       return;
@@ -1701,7 +1941,7 @@ const control = {
     const dir = input.held.up ? 'up' : (input.held.down ? 'down' : null);
     if(dir){
       this.holdTime = (this.lastDir===dir) ? this.holdTime + 1/60 : 0;
-      const speed = 1.1 + Math.min(3.2, this.holdTime*this.holdTime*3.2);
+      const speed = 0.9 + Math.min(2.0, this.holdTime*1.6);
       d.value = Math.min(100, Math.max(0, d.value + (dir==='up'?speed:-speed)));
     } else {
       this.holdTime = 0;
@@ -1722,7 +1962,7 @@ const control = {
   },
   draw(){
     bg();
-    drawHeader('MENCIÓN 04 · CONTROL AUTOMÁTICO · NIVEL '+this.round,'#ff6b3d',
+    drawHeader('MENCIÓN 04 · CONTROL AUTOMÁTICO · NIVEL '+this.round+'/5','#ff6b3d',
       'Lleva las 3 perillas a la zona VERDE antes que se acabe el tiempo', 'control');
     drawTimerBar(this.timeLeft, this.timeMax);
 
@@ -1760,12 +2000,12 @@ const control = {
     text(selDial.name+':', 58,400,15,'#ffcc55','Press Start 2P');
     wrapText(this.info[selDial.name], 58,424, 740, 20, 16, '#dff2e6');
 
-    if(this.state==='success') flashSuccess('¡PÉNDULO ESTABILIZADO!', '#5eff8f', 1.6-this.stateTime);
+    if(this.state==='success') flashSuccess('¡PÉNDULO ESTABILIZADO!', '#5eff8f', 1.6-this.stateTime, LEARNINGS.control);
     else if(this.state==='fail') flashSuccess('¡SE CAYÓ EL PÉNDULO!', '#ff6b6b', 1.8-this.stateTime);
   }
 };
 
-const games = {potencias, telecom, computadores, control};
+const games = {potencias, telecomunicaciones, computadores, control};
 
 /* ---------- salir al menú manteniendo B ----------
    El Makey Makey no tiene un botón "Start" propio (solo 6 frutas:
@@ -1776,25 +2016,40 @@ const games = {potencias, telecom, computadores, control};
    operador). Un anillo de carga muestra el progreso. */
 const EXIT_HOLD_MS = 1600;
 let exitHoldMs = 0;
+let exitReady = false;
 const exitRingEl = document.getElementById('exitRing');
 
 function updateExitCombo(input, dtMs){
-  if(currentScreen==='menu'){ exitHoldMs = 0; exitRingEl.style.display='none'; return; }
-  if(input.held.b){
-    exitHoldMs += dtMs;
-    if(exitHoldMs > 250){
-      exitRingEl.style.display = 'flex';
-      exitRingEl.style.setProperty('--p', Math.min(100, (exitHoldMs/EXIT_HOLD_MS)*100));
-    }
-    if(exitHoldMs >= EXIT_HOLD_MS){
-      exitHoldMs = 0;
+  if(currentScreen==='menu'){ exitHoldMs=0; exitReady=false; exitRingEl.classList.remove('ready'); exitRingEl.style.display='none'; return; }
+  const otherHeld = input.held.up || input.held.down || input.held.left || input.held.right || input.held.a;
+
+  // Para armar la salida, B debe mantenerse sin combinarse con otra acción.
+  if(input.held.b && !exitReady){
+    if(otherHeld){
+      exitHoldMs=0;
       exitRingEl.style.display='none';
-      sfxBack();
-      backToMenu();
+    } else {
+      exitHoldMs += dtMs;
+      if(exitHoldMs > 250){
+        exitRingEl.style.display='flex';
+        exitRingEl.style.setProperty('--p',Math.min(100,(exitHoldMs/EXIT_HOLD_MS)*100));
+      }
+      if(exitHoldMs >= EXIT_HOLD_MS){
+        exitReady=true;
+        exitRingEl.style.setProperty('--p',100);
+        exitRingEl.classList.add('ready');
+      }
     }
-  } else {
-    exitHoldMs = 0;
-    exitRingEl.style.display = 'none';
+  }
+
+  // La salida se confirma soltando B una vez que el anillo quedó armado.
+  if(exitReady && !input.held.b){
+    exitHoldMs=0; exitReady=false; exitRingEl.classList.remove('ready'); exitRingEl.style.display='none';
+    sfxBack();
+    backToMenu();
+  } else if(!input.held.b && !exitReady){
+    exitHoldMs=0;
+    exitRingEl.style.display='none';
   }
 }
 
@@ -1807,13 +2062,23 @@ function mainLoop(){
   } else {
     const idleMs = performance.now() - lastActivityTime;
 
-    // Tras ~30 s sin interacción, vuelve solo al menú para que el arcade
-    // nunca quede atrapado dentro de un minijuego abandonado.
-    if(idleMs >= GAME_IDLE_MS && !gameIdleTriggered && !screenTransitioning){
+    if(gameFinishActive){
+      // El mensaje final toma la atención y evita que una pulsación adicional cambie el estado.
+      hideIdleWarning();
+    } else if(idleMs >= GAME_IDLE_MS && !gameIdleTriggered && !screenTransitioning){
       gameIdleTriggered = true;
+      gameIdleWarningShown = false;
+      hideIdleWarning();
       sfxBack();
       backToMenu();
     } else if(!screenTransitioning){
+      if(idleMs >= GAME_IDLE_WARNING_MS){
+        gameIdleWarningShown = true;
+        showIdleWarning(Math.max(1, Math.ceil((GAME_IDLE_MS-idleMs)/1000)));
+      } else if(gameIdleWarningShown){
+        gameIdleWarningShown = false;
+        hideIdleWarning();
+      }
       updateExitCombo(input, FRAME_MS);
       if(input.pressed.start){
         backToMenu();
