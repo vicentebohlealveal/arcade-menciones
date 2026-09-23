@@ -19,7 +19,7 @@
     --green-dark:#3f7a1f;
     --amber:#ffcc00;
     --c-potencias:#ffcc00;
-    --c-telecomunicaciones:#00e5ff;
+    --c-telecom:#00e5ff;
     --c-computadores:#5eff8f;
     --c-control:#ff6b3d;
   }
@@ -113,7 +113,7 @@
   }
   .card.selected .name{ color:#fff; }
   .card[data-mencion="potencias"]{ --sel-color:var(--c-potencias); }
-  .card[data-mencion="telecomunicaciones"]{ --sel-color:var(--c-telecomunicaciones); }
+  .card[data-mencion="telecomunicaciones"]{ --sel-color:var(--c-telecom); }
   .card[data-mencion="computadores"]{ --sel-color:var(--c-computadores); }
   .card[data-mencion="control"]{ --sel-color:var(--c-control); }
 
@@ -172,10 +172,10 @@
     background:#0f231a; border:4px solid var(--border); border-radius:10px;
     box-shadow:0 10px 30px rgba(0,0,0,0.6);
     aspect-ratio:860/440;
-    width:min(946px, 92vw, calc((100vh - 96px) * 860 / 440));
+    width:min(946px, 92vw, calc((100vh - 154px) * 860 / 440));
     height:auto;
     max-width:92vw;
-    max-height:calc(100vh - 96px);
+    max-height:calc(100vh - 154px);
     object-fit:contain;
   }
   /* Fullscreen: el canvas conserva SIEMPRE 860:440 y deja respirar el
@@ -192,10 +192,10 @@
   }
   body.is-fullscreen #screen-menu{ width:100vw; height:100vh; }
   body.is-fullscreen #gameCanvas{
-    width:min(94vw, calc((100vh - 96px) * 860 / 440));
+    width:min(94vw, calc((100vh - 154px) * 860 / 440));
     height:auto;
     max-width:94vw;
-    max-height:calc(100vh - 96px);
+    max-height:calc(100vh - 154px);
     border-radius:10px;
     border-width:3px;
   }
@@ -302,14 +302,105 @@
   .demo-note{ margin-top:9px; text-align:center; font:17px 'VT323'; color:#ffe98a; }
 
   #controls-line{
-    width:min(920px,94vw); font-size:20px; color:var(--text-dim); text-align:center;
-    max-width:920px; background:var(--bg-panel); border:3px solid var(--border-soft); border-radius:9px;
-    padding:9px 14px; margin:0; line-height:1.35;
-    min-height:44px;
+    width:min(920px,94vw); max-width:920px;
+    min-height:96px;
+    margin:0;
+    padding:10px 14px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;
+    gap:16px;
+    background:rgba(15,35,26,.95);
+    border:3px solid var(--border-soft);
+    border-radius:10px;
+    color:var(--text-dim);
+    line-height:1.25;
+    box-shadow:0 8px 20px rgba(0,0,0,.35);
   }
-  #controls-line .controls-prefix{ color:#fff; margin-right:10px; letter-spacing:1px; }
-  #controls-line .kb{ width:28px; height:28px; font-size:12px; vertical-align:-7px; }
-  #controls-line .kb-active{ transform:scale(1.18); }
+  #controls-copy{
+    min-width:0;
+    font:20px 'VT323',monospace;
+    text-align:left;
+  }
+  #controls-copy .controls-prefix{
+    display:block;
+    margin-bottom:5px;
+    color:#fff;
+    font:12px 'Press Start 2P',monospace;
+    letter-spacing:1px;
+  }
+  #controls-copy .kb{ width:28px; height:28px; font-size:12px; vertical-align:-7px; }
+  #controls-copy .kb-active{ transform:scale(1.18); }
+
+  .mk-controller{
+    display:flex; align-items:center; gap:16px;
+    flex:none;
+    min-width:310px;
+    justify-content:center;
+  }
+  .mk-label{
+    font:10px 'Press Start 2P',monospace;
+    color:#8fb39a;
+    letter-spacing:.6px;
+    text-align:center;
+    margin-bottom:5px;
+  }
+  .mk-dpad-wrap{ display:flex; flex-direction:column; align-items:center; }
+  .mk-dpad{
+    position:relative;
+    width:126px; height:82px;
+  }
+  .mk-key{
+    position:absolute;
+    width:40px; height:32px;
+    border:3px solid #d7a52c;
+    border-radius:10px;
+    background:linear-gradient(145deg,#f6d66a,#c88e1d);
+    color:#2a2108;
+    box-shadow:0 4px 0 #7e5a11, 0 0 10px rgba(255,210,80,.16);
+    display:flex; align-items:center; justify-content:center;
+    font:15px 'Press Start 2P',monospace;
+  }
+  .mk-key.up{ left:43px; top:0; }
+  .mk-key.down{ left:43px; bottom:0; }
+  .mk-key.left{ left:0; top:25px; }
+  .mk-key.right{ right:0; top:25px; }
+  .mk-key::after{
+    content:'BANANA';
+    position:absolute; top:100%; margin-top:2px;
+    font:7px 'VT323',monospace; color:#8fb39a;
+    letter-spacing:.4px;
+  }
+  .mk-ab{ display:flex; flex-direction:column; gap:8px; }
+  .mk-ab-row{ display:flex; align-items:center; gap:7px; }
+  .mk-fruit{
+    width:48px; height:48px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    border:3px solid #d7a52c;
+    background:linear-gradient(145deg,#f6d66a,#c88e1d);
+    color:#2a2108;
+    font:16px 'Press Start 2P',monospace;
+    box-shadow:0 4px 0 #7e5a11, 0 0 12px rgba(255,210,80,.14);
+  }
+  .mk-fruit.b{ border-color:#c94b2b; background:linear-gradient(145deg,#ef7d50,#92301d); color:#fff0e8; box-shadow:0 4px 0 #5d2015; }
+  .mk-ab-text{ font:13px 'VT323',monospace; color:#dff2e6; }
+
+  /* Logos institucionales: se reutilizan exactamente los mismos archivos
+     ya embebidos en el menú, manteniendo su proporción con object-fit:contain. */
+  #game-brand{
+    position:fixed; top:10px; left:14px; z-index:61;
+    display:none; align-items:center; gap:7px;
+  }
+  body.game-active #game-brand{ display:flex; }
+  #game-brand .brand-box{
+    width:94px; height:32px;
+    padding:3px 6px;
+    border:2px solid rgba(255,255,255,.16);
+    border-radius:6px;
+    background:rgba(244,244,240,.92);
+    display:flex; align-items:center; justify-content:center;
+  }
+  #game-brand img{ max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; display:block; }
 
   .finish-card{
     position:fixed; inset:0; z-index:86; display:none; align-items:center; justify-content:center;
@@ -328,6 +419,17 @@
     .card .icon{ width:54px; height:54px; margin-bottom:10px; }
     #attractDemo{ min-height:118px; padding:10px 14px; }
     .demo-step{ min-height:44px; }
+    #controls-line{ min-height:84px; gap:10px; padding:8px 10px; }
+    #controls-copy{ font-size:18px; }
+    .mk-controller{ min-width:260px; gap:10px; }
+    .mk-dpad{ transform:scale(.88); transform-origin:center; margin:-5px -8px; }
+    .mk-fruit{ width:42px; height:42px; }
+    #game-brand .brand-box{ width:78px; height:28px; }
+  }
+  @media (max-width:780px){
+    #controls-line{ grid-template-columns:1fr; justify-items:center; }
+    #controls-copy{ width:100%; text-align:center; }
+    .mk-controller{ min-width:0; }
   }
 </style>
 </head>
@@ -348,6 +450,10 @@
   </div>
 </div>
 <div id="idleWarning"></div>
+<div id="game-brand" aria-hidden="true">
+  <div class="brand-box"><img id="gameBrandUsm" alt="Logo institucional"></div>
+  <div class="brand-box"><img id="gameBrandDepto" alt="Logo del departamento"></div>
+</div>
 <div class="finish-card" id="finishCard">
   <div class="finish-inner">
     <div class="finish-title" id="finishTitle">¡MÁQUINA DOMINADA!</div>
@@ -358,7 +464,7 @@
 <div id="statsPanel">
   <h3>📊 ESTADÍSTICAS DE LA JORNADA</h3>
   <div class="row"><span>Potencias</span><span id="st-potencias">0</span></div>
-  <div class="row"><span>Telecom</span><span id="st-telecomunicaciones">0</span></div>
+  <div class="row"><span>Telecomunicaciones</span><span id="st-telecomunicaciones">0</span></div>
   <div class="row"><span>Computadores</span><span id="st-computadores">0</span></div>
   <div class="row"><span>Control</span><span id="st-control">0</span></div>
   <div class="row"><b>TOTAL</b><b id="st-total">0</b></div>
@@ -427,7 +533,25 @@
 <!-- ===================== GAME ===================== -->
 <div id="screen-game">
   <canvas id="gameCanvas" width="860" height="440"></canvas>
-  <p id="controls-line"></p>
+  <div id="controls-line">
+    <div id="controls-copy"></div>
+    <div class="mk-controller" aria-label="Distribución física del Makey Makey">
+      <div class="mk-dpad-wrap">
+        <div class="mk-label">D-PAD · 4 BANANAS</div>
+        <div class="mk-dpad" aria-hidden="true">
+          <div class="mk-key up">▲</div>
+          <div class="mk-key left">◀</div>
+          <div class="mk-key right">▶</div>
+          <div class="mk-key down">▼</div>
+        </div>
+      </div>
+      <div class="mk-ab">
+        <div class="mk-label">BOTONES</div>
+        <div class="mk-ab-row"><div class="mk-fruit">A</div><span class="mk-ab-text">BANANA A</span></div>
+        <div class="mk-ab-row"><div class="mk-fruit b">B</div><span class="mk-ab-text">BANANA B</span></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -738,8 +862,14 @@ document.addEventListener('fullscreenchange', ()=>{
 const screenMenu = document.getElementById('screen-menu');
 const screenGame = document.getElementById('screen-game');
 const controlsLine = document.getElementById('controls-line');
+const controlsCopy = document.getElementById('controls-copy');
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const gameBrandUsm = document.getElementById('gameBrandUsm');
+const gameBrandDepto = document.getElementById('gameBrandDepto');
+const menuLogoImgs = document.querySelectorAll('.logos-row .logo-box img');
+if(menuLogoImgs[0] && gameBrandUsm) gameBrandUsm.src = menuLogoImgs[0].src;
+if(menuLogoImgs[1] && gameBrandDepto) gameBrandDepto.src = menuLogoImgs[1].src;
 const fsBtnEl = document.getElementById('fsBtn');
 
 const cardEls = Array.from(document.querySelectorAll('.card'));
@@ -826,7 +956,7 @@ function showGameIntro(id){
   document.getElementById('introSub').textContent = p.sub;
   el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
   clearTimeout(gameIntroTimer);
-  gameIntroTimer = setTimeout(()=> el.classList.remove('show'), 900);
+  gameIntroTimer = setTimeout(()=> el.classList.remove('show'), 3200);
 }
 
 function showIdleWarning(secondsLeft){
@@ -848,7 +978,7 @@ function showGameFinished(id){
     document.getElementById('finishCard').classList.remove('show');
     gameFinishActive = false;
     if(currentScreen!=='menu') backToMenu();
-  }, 2600);
+  }, 3000);
 }
 
 /* ---------- contador de partidas jugadas (persiste en este navegador) ---------- */
@@ -898,10 +1028,10 @@ function enterGame(id){
     document.getElementById('attractHint').style.display = 'none';
     attractDemoEl.classList.remove('show');
     document.getElementById('cards').classList.remove('attract-mode');
+    document.body.classList.add('game-active');
     screenMenu.style.display = 'none';
     screenGame.style.display = 'flex';
-    controlsLine.innerHTML = '<span class="controls-prefix pixel">CONTROLES</span> '+games[id].controlsHint +
-      ' &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> menú';
+    controlsCopy.innerHTML = '<span class="controls-prefix pixel">CONTROLES DE ESTA PRUEBA</span>'+games[id].controlsHint;
     games[id].reset();
     showGameIntro(id);
   });
@@ -918,6 +1048,7 @@ function backToMenu(){
     lastActivityTime = performance.now();
     resetInputState();
     setMusicTheme('menu');
+    document.body.classList.remove('game-active');
     screenGame.style.display = 'none';
     screenMenu.style.display = 'flex';
     renderMenuSelection();
@@ -1294,15 +1425,21 @@ function dirDelta(d){ return [[0,-1],[1,0],[0,1],[-1,0]][d]; }
 
 const POWER_LEVELS = [
   {cols:6, rows:3, source:{c:0,r:1}, target:{c:5,r:1}},
+  {cols:6, rows:3, source:{c:0,r:0}, target:{c:5,r:2}},
   {cols:7, rows:4, source:{c:0,r:0}, target:{c:6,r:3}},
+  {cols:7, rows:4, source:{c:0,r:3}, target:{c:6,r:0}},
   {cols:8, rows:4, source:{c:0,r:3}, target:{c:7,r:0}},
+  {cols:8, rows:4, source:{c:0,r:0}, target:{c:7,r:3}},
   {cols:9, rows:5, source:{c:0,r:4}, target:{c:8,r:0}},
+  {cols:9, rows:5, source:{c:0,r:0}, target:{c:8,r:4}},
+  {cols:10, rows:5, source:{c:0,r:4}, target:{c:9,r:0}},
+  {cols:10, rows:5, source:{c:0,r:0}, target:{c:9,r:4}},
 ];
 
 const potencias = {
   level:0, grid:null, cur:{c:1,r:0}, connected:false, successTime:0, timeoutTime:0,
   timeLeft:0, timeMax:0, cellPx:0, ox:0, oy:0, energyPath:null, pulseT:0,
-  timeForLevel(level){ return Math.max(12, 30 - level*3); },
+  timeForLevel(level){ return Math.max(18, 32 - level*1.45); },
   reset(){
     this.level = 0;
     randomFactCache.potencias = randomFact('potencias');
@@ -1342,7 +1479,7 @@ const potencias = {
     const path = buildPath();
     const pathSet = new Set(path.map(([c,r])=>c+','+r));
     const g=[];
-    const difficulty = Math.min(1, this.level/3);
+    const difficulty = Math.min(1, this.level/9);
     for(let r=0;r<def.rows;r++){
       const row=[];
       for(let c=0;c<def.cols;c++){
@@ -1442,6 +1579,7 @@ const potencias = {
     if(this.successTime>0){
       this.successTime -= 1/60;
       if(this.successTime<=0){
+        if(this.level>=9){ showGameFinished('potencias'); return; }
         this.level = this.level+1;
         this.setupLevel();
       }
@@ -1496,7 +1634,7 @@ const potencias = {
   },
   draw(){
     bg();
-    drawHeader('MENCIÓN 01 · POTENCIAS Y CIRCUITOS · NIVEL '+(this.level+1)+'/5','#ffcc00',
+    drawHeader('MENCIÓN 01 · POTENCIAS Y CIRCUITOS · NIVEL '+(this.level+1)+'/10','#ffcc00',
       'Conecta la energía desde el generador ⚡ hasta la carga 💡', 'potencias');
     drawTimerBar(this.timeLeft, this.timeMax);
     const def = this.def;
@@ -1586,7 +1724,7 @@ const potencias = {
 const telecomunicaciones = {
   level:0, freq:2, amp:0.5, targetFreq:3, targetAmp:0.7, successTime:0, timeoutTime:0,
   timeLeft:0, timeMax:0, matched:false,
-  timeForLevel(level){ return Math.max(9, 24 - level*2); },
+  timeForLevel(level){ return Math.max(16, 28 - level*1.2); },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> frecuencia &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> amplitud &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> nueva señal',
   reset(){
     this.level = 0; this.freq = 2; this.amp = 0.5;
@@ -1604,7 +1742,7 @@ const telecomunicaciones = {
     if(this.successTime>0){
       this.successTime -= 1/60;
       if(this.successTime<=0){
-        if(this.level>=4) showGameFinished('telecomunicaciones');
+        if(this.level>=9) showGameFinished('telecomunicaciones');
         else { this.level = this.level+1; this.newTarget(); }
       }
       return;
@@ -1620,8 +1758,10 @@ const telecomunicaciones = {
     if(input.rep.down)  this.amp = Math.max(0.1, +(this.amp-0.09).toFixed(2));
     if(input.pressed.b) this.newTarget();
 
-    const closeFreq = Math.abs(this.freq-this.targetFreq) < 0.26;
-    const closeAmp  = Math.abs(this.amp-this.targetAmp) < 0.07;
+    const freqTol = this.level < 4 ? 0.26 : (this.level < 7 ? 0.22 : 0.18);
+    const ampTol  = this.level < 4 ? 0.07 : (this.level < 7 ? 0.06 : 0.05);
+    const closeFreq = Math.abs(this.freq-this.targetFreq) < freqTol;
+    const closeAmp  = Math.abs(this.amp-this.targetAmp) < ampTol;
     if(closeFreq && closeAmp){
       this.matched=true; this.successTime = 1.4;
       sfxSuccess(); triggerShake(); randomFactCache.telecomunicaciones = randomFact('telecomunicaciones');
@@ -1633,7 +1773,7 @@ const telecomunicaciones = {
   },
   draw(){
     bg();
-    drawHeader('MENCIÓN 02 · TELECOMUNICACIONES · NIVEL '+(this.level+1)+'/5','#00e5ff',
+    drawHeader('MENCIÓN 02 · TELECOMUNICACIONES · NIVEL '+(this.level+1)+'/10','#00e5ff',
       'Sintoniza tu señal (cian) hasta calzar con la señal objetivo (gris)', 'telecomunicaciones');
     drawTimerBar(this.timeLeft, this.timeMax);
 
@@ -1698,7 +1838,7 @@ function gateTruthN(g,bits){
 const computadores = {
   level:0, inputs:2, gate:'AND', guess:[0,0,0,0], correct:null, cursor:0, checked:false, ok:false,
   successTime:0, timeoutTime:0, timeLeft:0, timeMax:0, demoIdx:0, demoTimer:0, feedback:'', hasEdited:false, gateHistory:[],
-  timeForLevel(level){ return Math.max(18, 38 - level*2); },
+  timeForLevel(level){ return Math.max(24, 40 - level*1.6); },
   controlsHint:'<span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> elegir fila &nbsp;·&nbsp; <span class="kb a" data-key="a">A</span> cambia 0/1 &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> revisar',
   rows:[[0,0],[0,1],[1,0],[1,1]],
   reset(){ this.level = 0; this.gateHistory=[]; randomFactCache.computadores = randomFact('computadores'); this.newGate(); },
@@ -1741,7 +1881,7 @@ const computadores = {
     if(this.successTime>0){
       this.successTime -= 1/60;
       if(this.successTime<=0){
-        if(this.level>=4) showGameFinished('computadores');
+        if(this.level>=9) showGameFinished('computadores');
         else { this.level = this.level+1; this.newGate(); }
       }
       return;
@@ -1836,7 +1976,7 @@ const computadores = {
   },
   draw(){
     bg();
-    drawHeader('MENCIÓN 03 · COMPUTADORES · NIVEL '+(this.level+1)+'/5','#5eff8f',
+    drawHeader('MENCIÓN 03 · COMPUTADORES · NIVEL '+(this.level+1)+'/10','#5eff8f',
       'Mira el ejemplo y luego completa la tabla de verdad', 'computadores');
     drawTimerBar(this.timeLeft, this.timeMax);
 
@@ -1895,7 +2035,7 @@ const control = {
   dials:null, sel:0, timeLeft:10, timeMax:13, round:1, tol:12, inZoneTime:0,
   state:'play', // 'play' | 'success' | 'fail'
   stateTime:0, holdTime:0, lastDir:null,
-  timeForRound(round){ return Math.max(10, 14 - (round-1)*0.45); },
+  timeForRound(round){ return Math.max(10.5, 14 - (round-1)*0.35); },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> elegir perilla &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> ajustar (mantén presionado para ir más rápido)',
   info:{
     Kp:'Reacciona según qué tan grande es el error AHORA MISMO.',
@@ -1923,7 +2063,7 @@ const control = {
       this.stateTime -= 1/60;
       if(this.stateTime<=0){
         if(this.state==='success'){
-          if(this.round>=5){ showGameFinished('control'); return; }
+          if(this.round>=10){ showGameFinished('control'); return; }
           this.round++; this.tol = Math.max(12,this.tol-1);
         }
         else { this.tol = 18; this.round=1; }
@@ -1962,7 +2102,7 @@ const control = {
   },
   draw(){
     bg();
-    drawHeader('MENCIÓN 04 · CONTROL AUTOMÁTICO · NIVEL '+this.round+'/5','#ff6b3d',
+    drawHeader('MENCIÓN 04 · CONTROL AUTOMÁTICO · NIVEL '+this.round+'/10','#ff6b3d',
       'Lleva las 3 perillas a la zona VERDE antes que se acabe el tiempo', 'control');
     drawTimerBar(this.timeLeft, this.timeMax);
 
@@ -2007,13 +2147,10 @@ const control = {
 
 const games = {potencias, telecomunicaciones, computadores, control};
 
-/* ---------- salir al menú manteniendo B ----------
-   El Makey Makey no tiene un botón "Start" propio (solo 6 frutas:
-   4 flechas + A + B). Pedir dos frutas a la vez (A+B) resultaba
-   incómodo de sostener a la vez jugando con las manos ocupadas, así
-   que ahora basta con mantener SOLO LA FRUTA B presionada ~1.6s para
-   volver al menú (además de Enter/Escape del teclado para el
-   operador). Un anillo de carga muestra el progreso. */
+/* ---------- salida segura al menú manteniendo B ----------
+   La salida requiere una secuencia deliberada: mantener B sin otras
+   acciones hasta armarla y luego soltar B para confirmar. Esto evita
+   salidas accidentales cuando B también es un botón de juego. */
 const EXIT_HOLD_MS = 1600;
 let exitHoldMs = 0;
 let exitReady = false;
