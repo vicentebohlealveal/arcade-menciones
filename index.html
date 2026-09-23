@@ -195,10 +195,10 @@
   }
   body.is-fullscreen #screen-menu{ width:100vw; height:100vh; }
   body.is-fullscreen #gameCanvas{
-    width:min(94vw, calc((100vh - 154px) * 860 / 440));
+    width:min(1040px, 96vw, calc((100vh - 138px) * 860 / 440));
     height:auto;
-    max-width:94vw;
-    max-height:calc(100vh - 154px);
+    max-width:96vw;
+    max-height:calc(100vh - 138px);
     border-radius:10px;
     border-width:3px;
   }
@@ -928,6 +928,7 @@ let gameIdleWarningShown = false;
 let gameFinishActive = false;
 let gameFinishTimer = null;
 let gameIntroTimer = null;
+let gameIntroActive = false;
 
 function resetInputState(){
   Object.keys(prevInput).forEach(k=>{ prevInput[k]=false; rawHistory[k]=false; });
@@ -993,13 +994,17 @@ function renderAttractDemo(id){
 function showGameIntro(id){
   const p = GAME_PRESENTATION[id] || GAME_PRESENTATION.potencias;
   const el = document.getElementById('gameIntro');
+  gameIntroActive = true;
   el.style.setProperty('--intro-color', p.color);
   document.getElementById('introCode').textContent = p.code;
   document.getElementById('introTitle').textContent = p.title;
   document.getElementById('introSub').textContent = p.sub;
   el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
   clearTimeout(gameIntroTimer);
-  gameIntroTimer = setTimeout(()=> el.classList.remove('show'), 3600);
+  gameIntroTimer = setTimeout(()=>{
+    gameIntroActive = false;
+    el.classList.remove('show');
+  }, 3800);
 }
 
 function showIdleWarning(secondsLeft){
@@ -1076,10 +1081,14 @@ function enterGame(id){
     screenGame.style.display = 'flex';
     controlsCopy.innerHTML = '<span class="controls-prefix pixel">¿CÓMO SE JUEGA?</span>'+games[id].controlsHint.replaceAll('&nbsp;·&nbsp;','<span class="control-sep">•</span>');
     games[id].reset();
+    lastActivityTime = performance.now();
     showGameIntro(id);
   });
 }
 function backToMenu(){
+  clearTimeout(gameIntroTimer);
+  gameIntroActive = false;
+  document.getElementById('gameIntro').classList.remove('show');
   fadeSwitch(()=>{
     currentScreen = 'menu';
     gameIdleTriggered = false;
@@ -2252,20 +2261,26 @@ function mainLoop(){
       sfxBack();
       backToMenu();
     } else if(!screenTransitioning){
-      if(idleMs >= GAME_IDLE_WARNING_MS){
-        gameIdleWarningShown = true;
-        showIdleWarning(Math.max(1, Math.ceil((GAME_IDLE_MS-idleMs)/1000)));
-      } else if(gameIdleWarningShown){
-        gameIdleWarningShown = false;
+      if(gameIntroActive){
+        // La pantalla de presentación no consume tiempo de juego.
         hideIdleWarning();
-      }
-      updateExitCombo(input, FRAME_MS);
-      if(input.pressed.start){
-        backToMenu();
-      } else if(currentScreen!=='menu'){
-        games[currentScreen].update(input);
-        games[currentScreen].draw();
-        updateAndDrawConfetti(FRAME_MS/1000);
+        if(currentScreen!=='menu') games[currentScreen].draw();
+      } else {
+        if(idleMs >= GAME_IDLE_WARNING_MS){
+          gameIdleWarningShown = true;
+          showIdleWarning(Math.max(1, Math.ceil((GAME_IDLE_MS-idleMs)/1000)));
+        } else if(gameIdleWarningShown){
+          gameIdleWarningShown = false;
+          hideIdleWarning();
+        }
+        updateExitCombo(input, FRAME_MS);
+        if(input.pressed.start){
+          backToMenu();
+        } else if(currentScreen!=='menu'){
+          games[currentScreen].update(input);
+          games[currentScreen].draw();
+          updateAndDrawConfetti(FRAME_MS/1000);
+        }
       }
     }
   }
