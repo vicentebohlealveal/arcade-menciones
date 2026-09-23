@@ -25,7 +25,7 @@
   }
   *{ box-sizing:border-box; }
   html,body{
-    margin:0; padding:0; height:100%;
+    margin:0; padding:0; width:100vw; height:100vh; max-width:100%; max-height:100%;
     background-color:var(--bg-dark);
     background-image:
       radial-gradient(ellipse at 50% 0%, rgba(108,191,58,0.10), transparent 60%),
@@ -58,10 +58,11 @@
     font-size:14px; letter-spacing:1px;
     padding:6px 12px; border:2px solid var(--border); border-radius:4px;
     background:var(--bg-panel); color:var(--text-dim);
+    max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   #gp-status.connected{ color:#5eff8f; border-color:#2f6b45; }
   #muteBtn{
-    position:fixed; top:14px; right:230px; z-index:60;
+    position:fixed; top:58px; right:18px; z-index:60;
     font-size:20px; padding:5px 10px; border:2px solid var(--border); border-radius:6px;
     background:var(--bg-panel); cursor:pointer; line-height:1;
   }
@@ -159,11 +160,29 @@
   }
 
   /* ---------- GAME SCREEN ---------- */
-  #screen-game{ display:none; height:100vh; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
+  #screen-game{
+    display:none; width:100vw; height:100vh; margin:0; padding:0;
+    flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    overflow:hidden;
+  }
   #gameCanvas{
     background:#0f231a; border:4px solid var(--border); border-radius:10px;
     box-shadow:0 10px 30px rgba(0,0,0,0.6);
-    max-width:96vw; max-height:84vh; width:860px; height:auto;
+    aspect-ratio:860/440;
+    width:946px;              /* tamaño base +10% respecto al original (860px) */
+    height:auto;
+    max-width:98vw; max-height:88vh;
+  }
+  /* En pantalla completa real, el canvas se estira al máximo posible
+     sin deformarse: mantiene su proporción 860:440 y "rellena" el
+     monitor (equivalente a object-fit:contain, pero funciona en
+     <canvas>, que no soporta object-fit de forma confiable). */
+  body.is-fullscreen{ width:100vw; height:100vh; overflow:hidden; }
+  body.is-fullscreen #screen-game{ width:100vw; height:100vh; gap:0; }
+  body.is-fullscreen #screen-menu{ width:100vw; height:100vh; }
+  body.is-fullscreen #gameCanvas{
+    width:auto; height:100vh; max-width:100vw; max-height:100vh;
+    border-radius:0; border-width:2px;
   }
   @keyframes shakeAnim{
     0%,100%{ transform:translate(0,0); }
@@ -218,7 +237,7 @@
 
   #vba-mark{
     position:fixed; right:10px; bottom:6px; z-index:5;
-    font-family:'VT323',monospace; font-size:16px; color:#dff2e6;
+    font-family:'VT323',monospace; font-size:16.8px; color:#dff2e6;
     opacity:0.3; pointer-events:none; user-select:none;
   }
 </style>
@@ -326,9 +345,9 @@ function ensureAudio(){
   }
   if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
   // el navegador bloquea el audio hasta el primer gesto del usuario;
-  // en cuanto se desbloquea, arrancamos la música de la pantalla actual
-  if(wasNull && audioCtx && !musicMuted && typeof currentScreen!=='undefined' && !musicTimer){
-    playMusic(currentScreen==='menu' ? 'menu' : currentScreen);
+  // en cuanto se desbloquea, arrancamos la música persistente (una sola vez)
+  if(wasNull && audioCtx && !musicMuted && !musicTimer){
+    playMusic();
   }
 }
 ['keydown','mousedown','touchstart'].forEach(ev=>window.addEventListener(ev, ensureAudio, {once:false}));
@@ -357,45 +376,47 @@ function sfxFail(){
 function sfxMenu(){ beep(180,0.05,'triangle',0.08); }
 
 /* ============================================================
-   MÚSICA — un loop chiptune corto y distinto por pantalla,
-   generado con osciladores (sin archivos de audio externos).
-   Empieza suave; hay un botón de silencio en la esquina.
+   MÚSICA — UN solo loop chiptune persistente (generado con
+   osciladores, sin archivos externos). Arranca cuando se
+   desmutea / se desbloquea el audio, y sigue sonando de forma
+   continua durante toda la navegación (menú, juegos, niveles)
+   sin cortarse ni reiniciarse — solo el botón de silencio lo
+   detiene.
    ============================================================ */
 let musicMuted = false;
 let musicVol = 0.05;
 let musicTimer = null;
 let musicStep = 0;
-let currentMusicId = null;
 
-const MUSIC = {
-  menu:        { tempo:230, wave:'square',   notes:[440,0,554,660, 0,660,554,440, 392,0,494,587, 0,587,494,392] },
-  potencias:   { tempo:190, wave:'square',   notes:[523,659,784,659, 523,659,784,988, 523,659,784,1046, 988,784,659,523] },
-  telecom:     { tempo:225, wave:'triangle', notes:[330,392,440,392, 330,262,330,392, 349,415,466,415, 349,294,349,415] },
-  computadores:{ tempo:175, wave:'square',   notes:[220,0,220,330, 0,220,262,0, 247,0,247,370, 0,247,294,0] },
-  control:     { tempo:150, wave:'sawtooth', notes:[196,0,247,0, 220,0,262,0, 196,0,233,0, 174,0,220,262] }
+const THEME = {
+  tempo:205, wave:'square',
+  notes:[
+    440,0,554,660, 0,660,554,440,
+    392,0,494,587, 0,587,494,392,
+    523,659,784,659, 523,659,784,988,
+    349,415,466,415, 349,294,349,415
+  ]
 };
 
 function stopMusic(){
   if(musicTimer){ clearInterval(musicTimer); musicTimer=null; }
 }
-function playMusic(id){
-  currentMusicId = id;
-  stopMusic();
-  if(musicMuted || !audioCtx || !MUSIC[id]) return;
-  const cfg = MUSIC[id];
+function playMusic(){
+  if(musicTimer) return; // ya está sonando: no la reiniciamos
+  if(musicMuted || !audioCtx) return;
   musicStep = 0;
   musicTimer = setInterval(()=>{
-    const freq = cfg.notes[musicStep % cfg.notes.length];
-    if(freq) beep(freq, cfg.tempo/1000*0.82, cfg.wave, musicVol);
+    const freq = THEME.notes[musicStep % THEME.notes.length];
+    if(freq) beep(freq, THEME.tempo/1000*0.82, THEME.wave, musicVol);
     musicStep++;
-  }, cfg.tempo);
+  }, THEME.tempo);
 }
 function toggleMusicMute(){
   musicMuted = !musicMuted;
   const btn = document.getElementById('muteBtn');
   if(btn) btn.textContent = musicMuted ? '🔇' : '🔊';
   if(musicMuted) stopMusic();
-  else if(currentMusicId) playMusic(currentMusicId);
+  else playMusic();
 }
 
 /* small visual flash on the on-screen key badges, so the child
@@ -511,7 +532,9 @@ function toggleFullscreen(){
 }
 document.addEventListener('fullscreenchange', ()=>{
   const lbl = document.getElementById('fsBtnLabel');
-  lbl.textContent = document.fullscreenElement ? 'SALIR DE PANTALLA COMPLETA' : 'PANTALLA COMPLETA';
+  const isFs = !!document.fullscreenElement;
+  lbl.textContent = isFs ? 'SALIR DE PANTALLA COMPLETA' : 'PANTALLA COMPLETA';
+  document.body.classList.toggle('is-fullscreen', isFs);
 });
 
 /* ============================================================
@@ -588,7 +611,6 @@ function enterGame(id){
     controlsLine.innerHTML = games[id].controlsHint +
       ' &nbsp;·&nbsp; mantén <span class="kb b" data-key="b">B</span> → menú';
     games[id].reset();
-    playMusic(id);
   });
 }
 function backToMenu(){
@@ -597,7 +619,6 @@ function backToMenu(){
     screenGame.style.display = 'none';
     screenMenu.style.display = 'flex';
     renderMenuSelection();
-    playMusic('menu');
   });
 }
 function updateMenu(input){
