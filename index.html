@@ -83,11 +83,18 @@
   }
   .logos-row{ display:flex; align-items:center; justify-content:center; gap:36px; margin-bottom:6px; }
   .logo-box{
-    background:#002A46; border-radius:10px; padding:12px 18px;
+    background:#002A46; border-radius:10px; padding:0;
+    width:170px; height:132px; overflow:hidden;
     display:flex; align-items:center; justify-content:center;
     box-shadow:0 6px 16px rgba(0,0,0,0.4);
   }
-  .logo-box img{ display:block; height:92px; width:auto; object-fit:contain; }
+  .logo-box img{ display:block; width:170px; height:170px; object-fit:contain; transform:scale(1.22); transform-origin:center; }
+
+  /* En pantallas bajas, reducimos ligeramente el tamaño para conservar todo el encabezado. */
+  @media (max-height:700px){
+    .logo-box{ width:130px; height:108px; }
+    .logo-box img{ width:140px; height:140px; transform:scale(1.18); }
+  }
 
   .title-block{ text-align:center; }
   .title-block h1{
@@ -1002,7 +1009,7 @@ function showGameIntro(id){
   gameIntroTimer = setTimeout(()=>{
     gameIntroActive = false;
     el.classList.remove('show');
-  }, 3800);
+  }, 3000);
 }
 
 function showIdleWarning(secondsLeft){
