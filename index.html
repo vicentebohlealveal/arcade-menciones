@@ -293,6 +293,25 @@
   #idleWarning.show{ display:block; animation:warningPulse .8s ease-in-out infinite; }
   @keyframes warningPulse{ 0%,100%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.02)} }
 
+  #levelTransition{
+    position:fixed; inset:0; z-index:84; display:none; align-items:center; justify-content:center;
+    background:rgba(5,11,9,.58); pointer-events:none;
+  }
+  #levelTransition.show{ display:flex; animation:levelTransitionIn .16s ease-out; }
+  .level-transition-inner{
+    min-width:min(620px,78vw); padding:22px 34px 24px; text-align:center;
+    border:3px solid #5eff8f; border-radius:12px;
+    background:linear-gradient(160deg,rgba(15,35,26,.98),rgba(6,18,13,.98));
+    box-shadow:0 0 0 2px rgba(255,255,255,.05),0 0 38px rgba(94,255,143,.28);
+  }
+  .level-transition-kicker{
+    font:11px 'Press Start 2P',monospace; color:#9fdab0; letter-spacing:1px; margin-bottom:12px;
+  }
+  .level-transition-title{
+    font:27px 'Press Start 2P',monospace; color:#fff; text-shadow:0 0 14px rgba(94,255,143,.28);
+  }
+  @keyframes levelTransitionIn{ from{opacity:0; transform:scale(.96)} to{opacity:1; transform:scale(1)} }
+
   #attractDemo{
     display:none; width:min(900px,92vw); min-height:138px; padding:16px 20px;
     border:3px solid var(--demo-color,#5eff8f); border-radius:10px;
@@ -330,24 +349,31 @@
   #controls-copy{
     min-width:0;
     display:flex;
-    flex-wrap:wrap;
+    flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:8px 12px;
-    font:21px 'VT323',monospace;
+    gap:8px;
+    font:22px 'VT323',monospace;
     text-align:center;
   }
   #controls-copy .controls-prefix{
-    flex:0 0 100%;
-    display:block;
-    margin-bottom:2px;
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:5px 10px 4px;
     color:#fff;
-    font:12px 'Press Start 2P',monospace;
+    font:11px 'Press Start 2P',monospace;
     letter-spacing:1px;
+    border:2px solid rgba(94,255,143,.34);
+    border-radius:6px;
+    background:rgba(94,255,143,.055);
+    box-shadow:inset 0 0 12px rgba(94,255,143,.035);
+  }
+  #controls-copy .controls-body{
+    display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+    gap:7px 11px; color:#e7f5eb; line-height:1.1;
   }
   #controls-copy .kb{ width:30px; height:30px; font-size:12px; vertical-align:-7px; }
   #controls-copy .kb-active{ transform:scale(1.18); }
-  #controls-copy .control-sep{ color:#52745f; margin:0 2px; }
+  #controls-copy .control-sep{ color:#52745f; margin:0 1px; }
 
   .mk-controller{
     display:flex; align-items:center; gap:22px;
@@ -439,7 +465,8 @@
     #attractDemo{ min-height:118px; padding:10px 14px; }
     .demo-step{ min-height:44px; }
     #controls-line{ min-height:96px; gap:10px; padding:8px 10px; }
-    #controls-copy{ font-size:18px; gap:5px 8px; }
+    #controls-copy{ font-size:19px; gap:6px; }
+    #controls-copy .controls-prefix{ font-size:10px; padding:4px 8px 3px; }
     .mk-controller{ min-width:260px; gap:10px; padding-left:6px; }
     .mk-dpad{ transform:scale(.88); transform-origin:center; margin:-5px -8px; }
     .mk-fruit{ width:42px; height:42px; }
@@ -469,6 +496,12 @@
   </div>
 </div>
 <div id="idleWarning"></div>
+<div id="levelTransition" aria-hidden="true">
+  <div class="level-transition-inner">
+    <div class="level-transition-kicker">NIVEL COMPLETADO</div>
+    <div class="level-transition-title" id="levelTransitionTitle">NIVEL 1 → NIVEL 2</div>
+  </div>
+</div>
 <div id="game-brand" aria-hidden="true">
   <div class="brand-box"><img id="gameBrandUsm" alt="Logo institucional"></div>
   <div class="brand-box"><img id="gameBrandDepto" alt="Logo del departamento"></div>
@@ -926,6 +959,9 @@ let menuSelection = 0; // 0..3 = cards, 4 = fullscreen button
 const MENU_ITEMS = mentionOrder.length + 1;
 let currentScreen = 'menu'; // 'menu' | one of mentionOrder
 let screenTransitioning = false;
+let levelTransitionActive = false;
+let levelTransitionTimer = null;
+const LEVEL_TRANSITION_MS = 720;
 const GAME_IDLE_WARNING_MS = 25000;
 const GAME_IDLE_MS = 30000;
 let gameIdleTriggered = false;
@@ -1019,6 +1055,20 @@ function showIdleWarning(secondsLeft){
 }
 function hideIdleWarning(){ document.getElementById('idleWarning').classList.remove('show'); }
 
+function showLevelTransition(fromLevel, toLevel){
+  const el = document.getElementById('levelTransition');
+  const title = document.getElementById('levelTransitionTitle');
+  if(!el) return;
+  levelTransitionActive = true;
+  title.textContent = 'NIVEL '+fromLevel+'  →  NIVEL '+toLevel;
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+  clearTimeout(levelTransitionTimer);
+  levelTransitionTimer = setTimeout(()=>{
+    el.classList.remove('show');
+    levelTransitionActive = false;
+  }, LEVEL_TRANSITION_MS);
+}
+
 function showGameFinished(id){
   if(gameFinishActive) return;
   gameFinishActive = true;
@@ -1084,7 +1134,7 @@ function enterGame(id){
     document.body.classList.add('game-active');
     screenMenu.style.display = 'none';
     screenGame.style.display = 'flex';
-    controlsCopy.innerHTML = '<span class="controls-prefix pixel">¿CÓMO SE JUEGA?</span>'+games[id].controlsHint.replaceAll('&nbsp;·&nbsp;','<span class="control-sep">•</span>');
+    controlsCopy.innerHTML = '<span class="controls-prefix pixel">¿CÓMO SE JUEGA?</span><span class="controls-body">'+games[id].controlsHint.replaceAll('&nbsp;·&nbsp;','<span class="control-sep">•</span>')+'</span>';
     games[id].reset();
     lastActivityTime = performance.now();
     showGameIntro(id);
@@ -1092,6 +1142,9 @@ function enterGame(id){
 }
 function backToMenu(){
   clearTimeout(gameIntroTimer);
+  clearTimeout(levelTransitionTimer);
+  levelTransitionActive = false;
+  document.getElementById('levelTransition').classList.remove('show');
   gameIntroActive = false;
   document.getElementById('gameIntro').classList.remove('show');
   fadeSwitch(()=>{
@@ -1664,7 +1717,9 @@ const potencias = {
       this.successTime -= 1/60;
       if(this.successTime<=0){
         if(this.level>=9){ showGameFinished('potencias'); return; }
+        const fromLevel = this.level+1;
         this.level = this.level+1;
+        showLevelTransition(fromLevel, this.level+1);
         this.setupLevel();
       }
       return;
@@ -1827,7 +1882,7 @@ const telecomunicaciones = {
       this.successTime -= 1/60;
       if(this.successTime<=0){
         if(this.level>=9) showGameFinished('telecomunicaciones');
-        else { this.level = this.level+1; this.newTarget(); }
+        else { const fromLevel=this.level+1; this.level = this.level+1; showLevelTransition(fromLevel,this.level+1); this.newTarget(); }
       }
       return;
     }
@@ -1966,7 +2021,7 @@ const computadores = {
       this.successTime -= 1/60;
       if(this.successTime<=0){
         if(this.level>=9) showGameFinished('computadores');
-        else { this.level = this.level+1; this.newGate(); }
+        else { const fromLevel=this.level+1; this.level = this.level+1; showLevelTransition(fromLevel,this.level+1); this.newGate(); }
       }
       return;
     }
@@ -2148,7 +2203,10 @@ const control = {
       if(this.stateTime<=0){
         if(this.state==='success'){
           if(this.round>=10){ showGameFinished('control'); return; }
-          this.round++; this.tol = Math.max(12,this.tol-1);
+          const fromLevel=this.round;
+          this.round++;
+          this.tol = Math.max(12,this.tol-1);
+          showLevelTransition(fromLevel,this.round);
         }
         else { this.tol = 18; this.round=1; }
         this.newRound();
@@ -2305,13 +2363,18 @@ function mainLoop(){
           gameIdleWarningShown = false;
           hideIdleWarning();
         }
-        updateExitCombo(input, FRAME_MS);
-        if(input.pressed.start){
-          backToMenu();
-        } else if(currentScreen!=='menu'){
-          games[currentScreen].update(input);
-          games[currentScreen].draw();
-          updateAndDrawConfetti(FRAME_MS/1000);
+        if(levelTransitionActive){
+          hideIdleWarning();
+          if(currentScreen!=='menu') games[currentScreen].draw();
+        } else {
+          updateExitCombo(input, FRAME_MS);
+          if(input.pressed.start){
+            backToMenu();
+          } else if(currentScreen!=='menu'){
+            games[currentScreen].update(input);
+            games[currentScreen].draw();
+            updateAndDrawConfetti(FRAME_MS/1000);
+          }
         }
       }
     }
