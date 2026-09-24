@@ -1576,7 +1576,7 @@ const POWER_LEVELS = [
 const potencias = {
   level:0, grid:null, cur:{c:1,r:0}, connected:false, successTime:0, timeoutTime:0,
   timeLeft:0, timeMax:0, cellPx:0, ox:0, oy:0, energyPath:null, pulseT:0,
-  timeForLevel(level){ return Math.max(18, 32 - level*1.45); },
+  timeForLevel(level){ return Math.max(18, 38 - level*2.2); },
   reset(){
     this.level = 0;
     randomFactCache.potencias = randomFact('potencias');
@@ -1863,7 +1863,7 @@ const potencias = {
 const telecomunicaciones = {
   level:0, freq:2, amp:0.5, targetFreq:3, targetAmp:0.7, successTime:0, timeoutTime:0,
   timeLeft:0, timeMax:0, matched:false,
-  timeForLevel(level){ return Math.max(16, 28 - level*1.2); },
+  timeForLevel(level){ return Math.max(17, 34 - level*1.9); },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> frecuencia &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> amplitud &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> nueva señal',
   reset(){
     this.level = 0; this.freq = 2; this.amp = 0.5;
@@ -1891,8 +1891,10 @@ const telecomunicaciones = {
       if(this.timeoutTime<=0) this.newTarget();
       return;
     }
-    if(input.rep.right) this.freq = Math.min(6, +(this.freq+0.5).toFixed(2));
-    if(input.rep.left)  this.freq = Math.max(0.5, +(this.freq-0.5).toFixed(2));
+    // Corrección de orientación: las flechas laterales estaban invertidas.
+    // Izquierda = subir frecuencia / derecha = bajar frecuencia.
+    if(input.rep.left)  this.freq = Math.min(6, +(this.freq+0.5).toFixed(2));
+    if(input.rep.right) this.freq = Math.max(0.5, +(this.freq-0.5).toFixed(2));
     if(input.rep.up)    this.amp = Math.min(1, +(this.amp+0.09).toFixed(2));
     if(input.rep.down)  this.amp = Math.max(0.1, +(this.amp-0.09).toFixed(2));
     if(input.pressed.b) this.newTarget();
@@ -1976,11 +1978,11 @@ function gateTruthN(g,bits){
 }
 const computadores = {
   level:0, inputs:2, gate:'AND', guess:[0,0,0,0], correct:null, cursor:0, checked:false, ok:false,
-  successTime:0, timeoutTime:0, timeLeft:0, timeMax:0, demoIdx:0, demoTimer:0, feedback:'', hasEdited:false, gateHistory:[],
-  timeForLevel(level){ return Math.max(24, 40 - level*1.6); },
+  successTime:0, timeoutTime:0, timeLeft:0, timeMax:0, demoIdx:0, demoTimer:0, feedback:'', hasEdited:false, gateHistory:[], gateBag:[], gatePoolSignature:'',
+  timeForLevel(level){ return Math.max(22, 46 - level*2.65); },
   controlsHint:'<span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> elegir fila &nbsp;·&nbsp; <span class="kb a" data-key="a">A</span> cambia 0/1 &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> revisar',
   rows:[[0,0],[0,1],[1,0],[1,1]],
-  reset(){ this.level = 0; this.gateHistory=[]; randomFactCache.computadores = randomFact('computadores'); this.newGate(); },
+  reset(){ this.level = 0; this.gateHistory=[]; this.gateBag=[]; this.gatePoolSignature=''; randomFactCache.computadores = randomFact('computadores'); this.newGate(); },
   newGate(){
     let pool;
     if(this.level < 2) pool = ['AND','OR'];
@@ -1988,19 +1990,36 @@ const computadores = {
     else if(this.level < 7) pool = ['AND','OR','XOR','NAND','NOR'];
     else pool = ['AND','OR','XOR','NAND','NOR','XNOR'];
 
-    let candidates = pool.filter(g=>!this.gateHistory.slice(-2).includes(g));
-    if(!candidates.length) candidates = pool.filter(g=>g!==this.gate || pool.length===1);
-    if(!candidates.length) candidates = pool.slice();
-    let next = candidates[Math.floor(Math.random()*candidates.length)];
-
-    // XNOR es una aparición ocasional, no una compuerta dominante.
-    if(this.level >= 7 && next==='XNOR' && Math.random()>0.07){
-      const nonXnor = candidates.filter(g=>g!=='XNOR');
-      next = nonXnor.length ? nonXnor[Math.floor(Math.random()*nonXnor.length)] : next;
+    // Usamos una bolsa barajada para que no aparezca la misma compuerta
+    // dos veces seguidas y, cuando hay varias opciones, se repartan de forma
+    // mucho más variada en vez de depender de una cadena de azar.
+    const poolSignature = pool.join('|');
+    if(this.gatePoolSignature !== poolSignature){
+      this.gatePoolSignature = poolSignature;
+      this.gateBag = [];
+    }
+    if(!this.gateBag.length){
+      this.gateBag = pool.slice();
+      if(this.gate && this.gateBag.length>1){
+        this.gateBag = this.gateBag.filter(g=>g!==this.gate);
+        if(this.gateBag.length === 0) this.gateBag = pool.slice();
+      }
+      for(let i=this.gateBag.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [this.gateBag[i],this.gateBag[j]]=[this.gateBag[j],this.gateBag[i]];
+      }
     }
 
+    // XNOR aparece ocasionalmente en niveles altos, sin dominar la rotación.
+    let pickIndex = 0;
+    if(this.level >= 7 && this.gateBag.length>1 && this.gateBag[0]==='XNOR' && Math.random()>0.07){
+      const alt = this.gateBag.findIndex(g=>g!=='XNOR');
+      if(alt>=0) pickIndex = alt;
+    }
+    const next = this.gateBag.splice(pickIndex,1)[0];
+
     this.gateHistory.push(next);
-    if(this.gateHistory.length>4) this.gateHistory.shift();
+    if(this.gateHistory.length>6) this.gateHistory.shift();
     this.gate = next;
     this.rows = [];
     for(let m=0; m<4; m++){
@@ -2174,7 +2193,7 @@ const control = {
   dials:null, sel:0, timeLeft:10, timeMax:13, round:1, tol:12, inZoneTime:0,
   state:'play', // 'play' | 'success' | 'fail'
   stateTime:0, holdTime:0, lastDir:null,
-  timeForRound(round){ return Math.max(10.5, 14 - (round-1)*0.35); },
+  timeForRound(round){ return Math.max(10.5, 18 - (round-1)*0.8); },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> elegir perilla &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> ajustar (mantén presionado para ir más rápido)',
   info:{
     Kp:'Reacciona según qué tan grande es el error AHORA MISMO.',
