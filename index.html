@@ -499,7 +499,7 @@
 <div id="crt"></div>
 <div id="vignette"></div>
 <div id="gp-status">🎮 Control no detectado — presiona un botón</div>
-<button id="muteBtn" onclick="toggleMusicMute()" title="Silenciar música">🔊</button>
+<button type="button" id="muteBtn" onclick="toggleMusicMute()" title="Silenciar música">🔊</button>
 <div id="exitRing" style="--p:0"></div>
 <div id="vba-mark">VBA</div>
 <div id="fadeOverlay"></div>
@@ -785,7 +785,7 @@ function scheduleMusicStep(){
               : 0;
   // Cada nivel acelera la canción. El nivel 10 queda claramente más rápido
   // que el nivel 1, pero con un piso para conservar audibilidad.
-  const tempo = Math.max(88, theme.tempo * (1 - Math.min(0.36, level * 0.04)));
+  const tempo = Math.max(78, theme.tempo * (1 - Math.min(0.48, level * 0.055)));
   if(freq) beep(freq, tempo/1000*0.78, theme.wave, musicVol);
 
   musicStep++;
@@ -817,6 +817,16 @@ function updateMuteButton(){
     btn.title = musicMuted ? 'Activar música' : 'Silenciar música';
     btn.setAttribute('aria-label', musicMuted ? 'Activar música' : 'Silenciar música');
   }
+}
+const muteBtnEl = document.getElementById('muteBtn');
+if(muteBtnEl){
+  muteBtnEl.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  });
+  muteBtnEl.addEventListener('click', ()=> muteBtnEl.blur());
 }
 function persistMutePreference(){
   try { localStorage.setItem('arcade_music_muted', musicMuted ? '1' : '0'); } catch(e) {}
@@ -865,7 +875,7 @@ function readInput(){
   if(keys['ArrowRight']) raw.right=true;
   if(keys['z']||keys['Z']||keys[' ']) raw.a=true;      // Space = Makey Makey front pad
   if(keys['x']||keys['X']||mouseHeld) raw.b=true;       // Click = Makey Makey front pad
-  if(keys['Enter']||keys['Escape']) raw.start=true;
+  if(keys['Escape']) raw.start=true;
   if(keys['f']||keys['F']) raw.fs=true;
 
   if(gpIndex!==null){
@@ -1679,7 +1689,7 @@ const POWER_LEVELS = [
 const potencias = {
   level:0, grid:null, cur:{c:1,r:0}, connected:false, successTime:0, timeoutTime:0,
   timeLeft:0, timeMax:0, cellPx:0, ox:0, oy:0, energyPath:null, pulseT:0,
-  timeForLevel(level){ return [45,41,37,33,29,25,22,19,16.5,14.5][Math.min(9,level)]; },
+  timeForLevel(level){ return [45,39,33,27,22,18,15,12.5,10.5,9][Math.min(9,level)]; },
   reset(){
     this.level = 0;
     randomFactCache.potencias = randomFact('potencias');
@@ -1966,7 +1976,7 @@ const potencias = {
 const telecomunicaciones = {
   level:0, freq:2, amp:0.5, targetFreq:3, targetAmp:0.7, successTime:0, timeoutTime:0,
   timeLeft:0, timeMax:0, matched:false,
-  timeForLevel(level){ return [40,36.5,33,29,25.5,22.5,19.5,17,14.5,12.5][Math.min(9,level)]; },
+  timeForLevel(level){ return [38,32,27,22,18,15,12,10,8.5,7.5][Math.min(9,level)]; },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> frecuencia &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> amplitud &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> nueva señal',
   reset(){
     this.level = 0; this.freq = 2; this.amp = 0.5;
@@ -1974,8 +1984,16 @@ const telecomunicaciones = {
     this.newTarget();
   },
   newTarget(){
-    this.targetFreq = 1 + Math.floor(Math.random()*6)*0.5;
-    this.targetAmp = 0.25 + Math.floor(Math.random()*8)*0.09;
+    const freqTol = this.level < 4 ? 0.26 : (this.level < 7 ? 0.22 : 0.18);
+    const ampTol  = this.level < 4 ? 0.07 : (this.level < 7 ? 0.06 : 0.05);
+    let tries = 0;
+    do {
+      this.targetFreq = 1 + Math.floor(Math.random()*6)*0.5;
+      this.targetAmp = 0.25 + Math.floor(Math.random()*8)*0.09;
+      tries++;
+    } while(tries < 30 &&
+      Math.abs(this.freq-this.targetFreq) < freqTol &&
+      Math.abs(this.amp-this.targetAmp) < ampTol);
     this.matched = false; this.successTime = 0; this.timeoutTime = 0;
     this.timeMax = this.timeForLevel(this.level);
     this.timeLeft = this.timeMax;
@@ -2082,7 +2100,7 @@ function gateTruthN(g,bits){
 const computadores = {
   level:0, inputs:2, gate:'AND', guess:[0,0,0,0], correct:null, cursor:0, checked:false, ok:false,
   successTime:0, timeoutTime:0, timeLeft:0, timeMax:0, demoIdx:0, demoTimer:0, feedback:'', hasEdited:false, gateHistory:[], gateBag:[], gatePoolSignature:'',
-  timeForLevel(level){ return [50,45,40,35,31,27,24,21,18,15.5][Math.min(9,level)]; },
+  timeForLevel(level){ return [48,40,33,27,22,18,15,12.5,10,8][Math.min(9,level)]; },
   controlsHint:'<span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> elegir fila &nbsp;·&nbsp; <span class="kb a" data-key="a">A</span> cambia 0/1 &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> revisar',
   rows:[[0,0],[0,1],[1,0],[1,1]],
   reset(){ this.level = 0; this.gateHistory=[]; this.gateBag=[]; this.gatePoolSignature=''; randomFactCache.computadores = randomFact('computadores'); this.newGate(); },
@@ -2295,7 +2313,8 @@ const control = {
   dials:null, sel:0, timeLeft:10, timeMax:13, round:1, tol:12, inZoneTime:0,
   state:'play', // 'play' | 'success' | 'fail'
   stateTime:0, holdTime:0, lastDir:null,
-  timeForRound(round){ return [22,19.5,17,15,13.5,12,11,10,9,8.5][Math.min(9,round-1)]; },
+  timeForRound(round){ return [20,17,14,12,10,8.5,7,6,5.5,5][Math.min(9,round-1)]; },
+  tolForRound(round){ return [18,17,15,13,11,10,9,8,7,6][Math.min(9,round-1)]; },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> elegir perilla &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> ajustar (mantén presionado para ir más rápido)',
   info:{
     Kp:'Reacciona según qué tan grande es el error AHORA MISMO.',
@@ -2303,15 +2322,36 @@ const control = {
     Kd:'Anticipa hacia dónde va el error y frena antes de pasarse.'
   },
   reset(){
-    this.round = 1; this.tol = 18;
+    this.round = 1; this.tol = this.tolForRound(this.round);
     randomFactCache.control = randomFact('control');
     this.newRound();
   },
   newRound(){
+    this.tol = this.tolForRound(this.round);
+    const forceOutside = this.round >= 3 ? [0,1,2] : [Math.floor(Math.random()*3)];
+    const makeDial = (name, mustBeOutside) => {
+      const target = 30 + Math.random()*40;
+      let value = 5 + Math.random()*90;
+      if(mustBeOutside){
+        const margin = this.tol + 7 + Math.random()*10;
+        const lowRoom = target - 5;
+        const highRoom = 95 - target;
+        if(lowRoom >= margin && highRoom >= margin){
+          const dir = Math.random() < 0.5 ? -1 : 1;
+          value = target + dir*(this.tol + 7 + Math.random()*10);
+        } else if(highRoom >= margin){
+          value = target + Math.min(highRoom, margin + Math.random()*6);
+        } else {
+          value = target - Math.min(lowRoom, margin + Math.random()*6);
+        }
+      }
+      value = Math.max(0, Math.min(100, value));
+      return {name, value, target};
+    };
     this.dials = [
-      {name:'Kp', value:50, target: 15+Math.random()*70},
-      {name:'Ki', value:50, target: 15+Math.random()*70},
-      {name:'Kd', value:50, target: 15+Math.random()*70},
+      makeDial('Kp', forceOutside.includes(0)),
+      makeDial('Ki', forceOutside.includes(1)),
+      makeDial('Kd', forceOutside.includes(2)),
     ];
     this.sel = 0; this.inZoneTime = 0;
     this.timeMax = this.timeForRound(this.round);
@@ -2326,10 +2366,10 @@ const control = {
           if(this.round>=10){ showGameFinished('control'); return; }
           const fromLevel=this.round;
           this.round++;
-          this.tol = Math.max(12,this.tol-1);
+          this.tol = this.tolForRound(this.round);
           showLevelTransition(fromLevel,this.round);
         }
-        else { this.tol = 18; this.round=1; }
+        else { this.round=1; this.tol=this.tolForRound(this.round); }
         this.newRound();
       }
       return;
