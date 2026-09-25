@@ -499,7 +499,7 @@
 <div id="crt"></div>
 <div id="vignette"></div>
 <div id="gp-status">🎮 Control no detectado — presiona un botón</div>
-<button type="button" id="muteBtn" onclick="toggleMusicMute()" title="Silenciar música">🔊</button>
+<button type="button" id="muteBtn" tabindex="-1" title="Silenciar música" aria-label="Silenciar música">🔊</button>
 <div id="exitRing" style="--p:0"></div>
 <div id="vba-mark">VBA</div>
 <div id="fadeOverlay"></div>
@@ -821,13 +821,24 @@ function updateMuteButton(){
 const muteBtnEl = document.getElementById('muteBtn');
 if(muteBtnEl){
   muteBtnEl.addEventListener('keydown', e=>{
-    if(e.key==='Enter'){
+    if(e.key==='Enter' || e.key===' '){
       e.preventDefault();
       e.stopImmediatePropagation();
     }
   });
-  muteBtnEl.addEventListener('click', ()=> muteBtnEl.blur());
+  muteBtnEl.addEventListener('mousedown', e=> e.preventDefault());
+  muteBtnEl.addEventListener('click', e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    toggleMusicMute();
+    muteBtnEl.blur();
+  });
 }
+// Enter no es un control del arcade. Se ignora globalmente para evitar
+// activaciones nativas de botones y dobles acciones involuntarias.
+window.addEventListener('keydown', e=>{
+  if(e.key==='Enter') e.preventDefault();
+}, true);
 function persistMutePreference(){
   try { localStorage.setItem('arcade_music_muted', musicMuted ? '1' : '0'); } catch(e) {}
 }
@@ -1689,7 +1700,7 @@ const POWER_LEVELS = [
 const potencias = {
   level:0, grid:null, cur:{c:1,r:0}, connected:false, successTime:0, timeoutTime:0,
   timeLeft:0, timeMax:0, cellPx:0, ox:0, oy:0, energyPath:null, pulseT:0,
-  timeForLevel(level){ return [35,31.5,28,24.5,21,18,15.5,13.5,11.5,10][Math.min(9,level)]; },
+  timeForLevel(level){ return [35,32,29,26,23,20,17,15,13,12][Math.min(9,level)]; },
   reset(){
     this.level = 0;
     randomFactCache.potencias = randomFact('potencias');
@@ -1976,7 +1987,7 @@ const potencias = {
 const telecomunicaciones = {
   level:0, freq:2, amp:0.5, targetFreq:3, targetAmp:0.7, successTime:0, timeoutTime:0,
   timeLeft:0, timeMax:0, matched:false,
-  timeForLevel(level){ return [30,27,24.5,22,19.5,17,14.5,12,9.5,7.5][Math.min(9,level)]; },
+  timeForLevel(level){ return [25,23,21,19,17,15,12.5,10,7.5,5.5][Math.min(9,level)]; },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> frecuencia &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> amplitud &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> nueva señal',
   reset(){
     this.level = 0; this.freq = 2; this.amp = 0.5;
@@ -2101,7 +2112,7 @@ const computadores = {
   level:0, inputs:2, gate:'AND', guess:[0,0,0,0], correct:null, cursor:0, checked:false, ok:false,
   successTime:0, timeoutTime:0, timeLeft:0, timeMax:0, demoIdx:0, demoTimer:0, feedback:'', hasEdited:false, gateHistory:[], gateBag:[], gatePoolSignature:'',
   timeForLevel(level){ return [35,31,27.5,24,20.5,17,14.5,12,10.8,10][Math.min(9,level)]; },
-  controlsHint:'<span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> elegir fila &nbsp;·&nbsp; <span class="kb a" data-key="a">A</span> cambia 0/1 &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> revisar',
+  controlsHint:'<span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> elegir fila &nbsp;·&nbsp; <span class="kb a" data-key="a">A</span> cambia 0/1 &nbsp;·&nbsp; la tabla correcta se aprueba sola',
   rows:[[0,0],[0,1],[1,0],[1,1]],
   reset(){ this.level = 0; this.gateHistory=[]; this.gateBag=[]; this.gatePoolSignature=''; randomFactCache.computadores = randomFact('computadores'); this.newGate(); },
   newGate(){
@@ -2151,7 +2162,7 @@ const computadores = {
     this.correct = this.rows.map(bits => gateTruthN(this.gate, bits));
     this.cursor = 0; this.checked=false; this.ok=false; this.hasEdited=false;
     this.successTime=0; this.timeoutTime=0; this.demoIdx=0;
-    this.feedback = 'COMPLETA LA TABLA Y PULSA B';
+    this.feedback = 'COMPLETA LA TABLA · SE APRUEBA SOLA';
     this.timeMax = this.timeForLevel(this.level);
     this.timeLeft = this.timeMax;
   },
@@ -2179,19 +2190,22 @@ const computadores = {
       this.guess[this.cursor] = this.guess[this.cursor]?0:1;
       this.checked=false;
       this.hasEdited=true;
-    }
-    if(input.pressed.b && !this.checked && this.hasEdited){
-      this.checked = true;
-      this.ok = this.guess.every((v,i)=>v===this.correct[i]);
-      if(this.ok){
+
+      // La tabla se valida automáticamente al quedar completa y correcta.
+      // No se necesita pulsar B para revisar; B queda reservado para la salida.
+      const nowCorrect = this.guess.every((v,i)=>v===this.correct[i]);
+      if(nowCorrect){
+        this.checked=true;
+        this.ok=true;
         this.feedback='¡TABLA CORRECTA!'; this.successTime=1.4;
         randomFactCache.computadores = randomFact('computadores');
         sfxSuccess(); triggerShake();
         spawnConfetti(canvas.width/2, 150);
-      } else { this.feedback = 'REVISA LAS FILAS EN ROJO'; sfxFail(); }
-    } else if(input.pressed.b && !this.hasEdited && !this.checked){
-      this.feedback = 'PRIMERO CAMBIA AL MENOS UNA FILA'; sfxConfirm();
-    } else if(!this.checked){
+        return;
+      }
+    }
+
+    if(!this.checked){
       this.timeLeft -= 1/60;
       if(this.timeLeft<=0){ this.timeoutTime = 1.3; sfxFail(); triggerShake(); }
     }
@@ -2313,7 +2327,7 @@ const control = {
   dials:null, sel:0, timeLeft:10, timeMax:13, round:1, tol:12, inZoneTime:0,
   state:'play', // 'play' | 'success' | 'fail'
   stateTime:0, holdTime:0, lastDir:null,
-  timeForRound(round){ return [20,18.2,16.5,14.5,12.5,10.8,9.5,8.5,8,8][Math.min(9,round-1)]; },
+  timeForRound(round){ return [20,19,18,16.8,15.2,13.8,12.5,11.5,10.5,10][Math.min(9,round-1)]; },
   tolForRound(round){ return [18,17,15,13,11.5,10.5,9.5,8.5,8,8][Math.min(9,round-1)]; },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> elegir perilla &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> ajustar (mantén presionado para ir más rápido)',
   info:{
