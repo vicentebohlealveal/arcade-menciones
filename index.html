@@ -688,6 +688,9 @@ function sfxMenu(){ beep(180,0.05,'triangle',0.08); }
    aplica al terminar la frase actual, evitando cortes bruscos.
    ============================================================ */
 let musicMuted = false;
+try {
+  musicMuted = localStorage.getItem('arcade_music_muted') === '1';
+} catch(e) {}
 let musicVol = 0.045;
 let musicTimer = null;
 let musicStep = 0;
@@ -807,13 +810,25 @@ function playMusic(){
   scheduleMusicStep();
 }
 
+function updateMuteButton(){
+  const btn = document.getElementById('muteBtn');
+  if(btn){
+    btn.textContent = musicMuted ? '🔇' : '🔊';
+    btn.title = musicMuted ? 'Activar música' : 'Silenciar música';
+    btn.setAttribute('aria-label', musicMuted ? 'Activar música' : 'Silenciar música');
+  }
+}
+function persistMutePreference(){
+  try { localStorage.setItem('arcade_music_muted', musicMuted ? '1' : '0'); } catch(e) {}
+}
 function toggleMusicMute(){
   musicMuted = !musicMuted;
-  const btn = document.getElementById('muteBtn');
-  if(btn) btn.textContent = musicMuted ? '🔇' : '🔊';
+  persistMutePreference();
+  updateMuteButton();
   if(musicMuted) stopMusic();
   else playMusic();
 }
+updateMuteButton();
 
 
 /* small visual flash on the on-screen key badges, so the child
@@ -1140,10 +1155,40 @@ function toggleStats(){
   if(statsOpen) refreshStatsPanel();
   document.getElementById('statsPanel').style.display = statsOpen ? 'block' : 'none';
 }
+let secretKeyMCount = 0;
+let secretKeyPCount = 0;
+let secretSequenceTimer = null;
+const SECRET_SEQUENCE_TIMEOUT_MS = 2200;
+function resetSecretSequence(){
+  secretKeyMCount = 0;
+  secretKeyPCount = 0;
+  clearTimeout(secretSequenceTimer);
+  secretSequenceTimer = null;
+}
+function bumpSecretSequence(key){
+  if(secretSequenceTimer) clearTimeout(secretSequenceTimer);
+  secretSequenceTimer = setTimeout(resetSecretSequence, SECRET_SEQUENCE_TIMEOUT_MS);
+  if(key==='m'){
+    secretKeyPCount = 0;
+    secretKeyMCount++;
+    if(secretKeyMCount >= 3){
+      resetSecretSequence();
+      enterGame('secretM');
+    }
+  } else if(key==='p'){
+    secretKeyMCount = 0;
+    secretKeyPCount++;
+    if(secretKeyPCount >= 3){
+      resetSecretSequence();
+      enterGame('secretP');
+    }
+  }
+}
 window.addEventListener('keydown', e=>{
   if(currentScreen==='menu' && !e.repeat){
-    if(e.key==='m' || e.key==='M'){ e.preventDefault(); enterGame('secretM'); return; }
-    if(e.key==='p' || e.key==='P'){ e.preventDefault(); enterGame('secretP'); return; }
+    if(e.key==='m' || e.key==='M'){ e.preventDefault(); bumpSecretSequence('m'); return; }
+    if(e.key==='p' || e.key==='P'){ e.preventDefault(); bumpSecretSequence('p'); return; }
+    resetSecretSequence();
   }
   if(e.key==='i' || e.key==='I') toggleStats();
   if((e.key==='R') && e.shiftKey) resetSession();
