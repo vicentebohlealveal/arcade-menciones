@@ -1689,7 +1689,7 @@ const POWER_LEVELS = [
 const potencias = {
   level:0, grid:null, cur:{c:1,r:0}, connected:false, successTime:0, timeoutTime:0,
   timeLeft:0, timeMax:0, cellPx:0, ox:0, oy:0, energyPath:null, pulseT:0,
-  timeForLevel(level){ return [45,39,33,27,22,18,15,12.5,10.5,9][Math.min(9,level)]; },
+  timeForLevel(level){ return [35,31.5,28,24.5,21,18,15.5,13.5,11.5,10][Math.min(9,level)]; },
   reset(){
     this.level = 0;
     randomFactCache.potencias = randomFact('potencias');
@@ -1976,7 +1976,7 @@ const potencias = {
 const telecomunicaciones = {
   level:0, freq:2, amp:0.5, targetFreq:3, targetAmp:0.7, successTime:0, timeoutTime:0,
   timeLeft:0, timeMax:0, matched:false,
-  timeForLevel(level){ return [38,32,27,22,18,15,12,10,8.5,7.5][Math.min(9,level)]; },
+  timeForLevel(level){ return [30,27,24.5,22,19.5,17,14.5,12,9.5,7.5][Math.min(9,level)]; },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> frecuencia &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> amplitud &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> nueva señal',
   reset(){
     this.level = 0; this.freq = 2; this.amp = 0.5;
@@ -2100,7 +2100,7 @@ function gateTruthN(g,bits){
 const computadores = {
   level:0, inputs:2, gate:'AND', guess:[0,0,0,0], correct:null, cursor:0, checked:false, ok:false,
   successTime:0, timeoutTime:0, timeLeft:0, timeMax:0, demoIdx:0, demoTimer:0, feedback:'', hasEdited:false, gateHistory:[], gateBag:[], gatePoolSignature:'',
-  timeForLevel(level){ return [48,40,33,27,22,18,15,12.5,10,8][Math.min(9,level)]; },
+  timeForLevel(level){ return [35,31,27.5,24,20.5,17,14.5,12,10.8,10][Math.min(9,level)]; },
   controlsHint:'<span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> elegir fila &nbsp;·&nbsp; <span class="kb a" data-key="a">A</span> cambia 0/1 &nbsp;·&nbsp; <span class="kb b" data-key="b">B</span> revisar',
   rows:[[0,0],[0,1],[1,0],[1,1]],
   reset(){ this.level = 0; this.gateHistory=[]; this.gateBag=[]; this.gatePoolSignature=''; randomFactCache.computadores = randomFact('computadores'); this.newGate(); },
@@ -2313,8 +2313,8 @@ const control = {
   dials:null, sel:0, timeLeft:10, timeMax:13, round:1, tol:12, inZoneTime:0,
   state:'play', // 'play' | 'success' | 'fail'
   stateTime:0, holdTime:0, lastDir:null,
-  timeForRound(round){ return [20,17,14,12,10,8.5,7,6,5.5,5][Math.min(9,round-1)]; },
-  tolForRound(round){ return [18,17,15,13,11,10,9,8,7,6][Math.min(9,round-1)]; },
+  timeForRound(round){ return [20,18.2,16.5,14.5,12.5,10.8,9.5,8.5,8,8][Math.min(9,round-1)]; },
+  tolForRound(round){ return [18,17,15,13,11.5,10.5,9.5,8.5,8,8][Math.min(9,round-1)]; },
   controlsHint:'<span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> elegir perilla &nbsp;·&nbsp; <span class="kb dpad" data-key="up">▲</span><span class="kb dpad" data-key="down">▼</span> ajustar (mantén presionado para ir más rápido)',
   info:{
     Kp:'Reacciona según qué tan grande es el error AHORA MISMO.',
@@ -2391,17 +2391,26 @@ const control = {
     }
     this.lastDir = dir;
 
-    this.timeLeft -= 1/60;
+    // Primero comprobamos si el jugador logró estabilizar el sistema.
+    // Esto evita que una solución alcanzada justo al final del reloj sea
+    // descartada por el decremento de tiempo del mismo frame.
     const allIn = this.dials.every(dd => Math.abs(dd.value-dd.target) <= this.tol);
-    this.inZoneTime = allIn ? this.inZoneTime + 1/60 : 0;
-
-    if(this.inZoneTime > 0.65){
-      this.state='success'; this.stateTime=1.6;
-      randomFactCache.control = randomFact('control');
-      sfxSuccess(); triggerShake();
-      spawnConfetti(canvas.width/2, 150);
+    if(allIn){
+      this.inZoneTime += 1/60;
+      // Respuesta más inmediata: basta mantener las 3 perillas en verde
+      // durante unas décimas para confirmar la estabilización.
+      if(this.inZoneTime >= 0.20){
+        this.state='success'; this.stateTime=1.6;
+        randomFactCache.control = randomFact('control');
+        sfxSuccess(); triggerShake();
+        spawnConfetti(canvas.width/2, 150);
+        return;
+      }
+    } else {
+      this.inZoneTime = 0;
+      this.timeLeft -= 1/60;
+      if(this.timeLeft <= 0){ this.state='fail'; this.stateTime=1.8; sfxFail(); triggerShakeHard(); }
     }
-    else if(this.timeLeft <= 0){ this.state='fail'; this.stateTime=1.8; sfxFail(); triggerShakeHard(); }
   },
   draw(){
     bg();
