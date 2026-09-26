@@ -2023,10 +2023,12 @@ const telecomunicaciones = {
       if(this.timeoutTime<=0) this.newTarget();
       return;
     }
-    // Corrección de orientación: izquierda debe mover la señal hacia
-    // frecuencias menores y derecha hacia frecuencias mayores.
-    if(input.rep.left)  this.freq = Math.max(0.5, +(this.freq-0.5).toFixed(2));
-    if(input.rep.right) this.freq = Math.min(6, +(this.freq+0.5).toFixed(2));
+    // Orientación física del control: izquierda aumenta la frecuencia
+    // hacia el lado que el jugador percibe como izquierdo y derecha la reduce.
+    // Se invierte respecto de la convención numérica para que las flechas
+    // coincidan con el sentido visual del juego.
+    if(input.rep.left)  this.freq = Math.min(6, +(this.freq+0.5).toFixed(2));
+    if(input.rep.right) this.freq = Math.max(0.5, +(this.freq-0.5).toFixed(2));
     if(input.rep.up)    this.amp = Math.min(1, +(this.amp+0.09).toFixed(2));
     if(input.rep.down)  this.amp = Math.max(0.1, +(this.amp-0.09).toFixed(2));
     if(input.pressed.b) this.newTarget();
