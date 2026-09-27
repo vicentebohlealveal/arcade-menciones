@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Arcade de Menciones — Ingeniería Eléctrica · v13</title>
+<title>Arcade de Menciones — Ingeniería Civil Electrónica UTFSM · Final</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
@@ -268,6 +268,31 @@
   #statsPanel .row{ display:flex; justify-content:space-between; gap:22px; margin:6px 0; }
   #statsPanel .hint2{ margin-top:14px; font-size:15px; color:var(--text-dim); }
 
+  #difficultyPanel{
+    display:none; position:fixed; inset:0; z-index:92; align-items:center; justify-content:center;
+    background:rgba(5,11,9,.88); backdrop-filter:blur(3px);
+  }
+  #difficultyPanel.show{ display:flex; }
+  .difficulty-card{ width:min(760px,88vw); padding:28px 30px 24px; text-align:center; border:4px solid #5eff8f;
+    border-radius:12px; background:linear-gradient(160deg,rgba(15,35,26,.99),rgba(6,18,13,.99));
+    box-shadow:0 0 0 3px rgba(255,255,255,.05),0 0 46px rgba(94,255,143,.30); }
+  .difficulty-title{ font:19px 'Press Start 2P'; color:#fff; line-height:1.45; }
+  .difficulty-sub{ margin-top:10px; font:22px 'VT323'; color:#9fc2ac; }
+  .difficulty-options{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:22px 0 16px; }
+  .difficulty-option{ appearance:none; border:3px solid #2e5a3e; border-radius:8px; padding:16px 10px 14px; cursor:pointer;
+    color:#dff2e6; background:#0c1d16; font-family:'Press Start 2P',monospace; font-size:13px; box-shadow:0 5px 0 #07120c;
+    transition:transform .1s,border-color .1s,box-shadow .1s,background .1s; }
+  .difficulty-option.selected{ transform:translateY(-4px); border-color:#5eff8f; color:#fff; background:#123222;
+    box-shadow:0 0 0 3px #5eff8f,0 0 24px rgba(94,255,143,.30),0 6px 0 #07120c; }
+  .difficulty-option .diff-time{ display:block; margin-top:9px; font:18px 'VT323'; color:#b9d5c1; }
+  .difficulty-option .diff-game{ display:block; margin-top:5px; font:15px 'VT323'; color:#7ea88c; line-height:1.05; }
+  .difficulty-manual{ appearance:none; border:2px solid #496a56; border-radius:7px; padding:8px 14px; color:#ffe98a;
+    background:#0a1712; cursor:pointer; font:17px 'VT323'; }
+  .difficulty-manual:hover{ border-color:#ffe98a; box-shadow:0 0 16px rgba(255,233,138,.20); }
+  .difficulty-help{ margin-top:13px; font:17px 'VT323'; color:#7ea88c; }
+  .difficulty-current{ margin-top:5px; font:16px 'VT323'; color:#5eff8f; }
+  #menu-config-hint{ font:17px 'VT323'; color:#7ea88c; text-align:center; margin-top:-18px; }
+
   #controls-line{
     font-size:18px; color:var(--text-dim); text-align:center; max-width:860px;
     background:var(--bg-panel); border:2px solid var(--border-soft); border-radius:8px;
@@ -528,6 +553,21 @@
     <div class="finish-next">Preparando el menú…</div>
   </div>
 </div>
+<div id="difficultyPanel" aria-hidden="true">
+  <div class="difficulty-card">
+    <div class="difficulty-title">CONFIGURAR DIFICULTAD</div>
+    <div class="difficulty-sub">Afecta el tiempo y la progresión de los cuatro minijuegos.</div>
+    <div class="difficulty-options" id="difficultyOptions">
+      <button type="button" class="difficulty-option" data-mode="low">BAJO<span class="diff-time">+24% TIEMPO</span><span class="diff-game">progresión suave</span></button>
+      <button type="button" class="difficulty-option" data-mode="medium">MEDIO<span class="diff-time">TIEMPO BASE</span><span class="diff-game">configuración estándar</span></button>
+      <button type="button" class="difficulty-option" data-mode="high">ALTO<span class="diff-time">-18% TIEMPO</span><span class="diff-game">progresión exigente</span></button>
+    </div>
+    <div class="difficulty-current" id="difficultyCurrent">DIFICULTAD ACTUAL: MEDIO</div>
+    <div style="margin-top:14px"><button type="button" class="difficulty-manual" id="downloadManualBtn">DESCARGAR MANUAL DEL OPERADOR</button></div>
+    <div class="difficulty-help">D = abrir/cerrar · ◀ ▶ / ▲ ▼ = elegir · A = confirmar · B o Esc = cerrar</div>
+  </div>
+</div>
+
 <div id="statsPanel">
   <h3>📊 ESTADÍSTICAS DE LA JORNADA</h3>
   <div class="row"><span>Potencias</span><span id="st-potencias">0</span></div>
@@ -588,6 +628,7 @@
     <span class="kb dpad" data-key="left">◀</span><span class="kb dpad" data-key="right">▶</span> elegir &nbsp;·&nbsp;
     <span class="kb a" data-key="a">A</span> entrar
   </p>
+  <div id="menu-config-hint">D = CONFIGURAR DIFICULTAD</div>
   <p id="attractHint">🕹️ ¡TOCA UN BOTÓN PARA JUGAR! 🕹️</p>
   <div id="attractDemo">
     <div class="demo-head">
@@ -886,7 +927,6 @@ function readInput(){
   if(keys['ArrowRight']) raw.right=true;
   if(keys['z']||keys['Z']||keys[' ']) raw.a=true;      // Space = Makey Makey front pad
   if(keys['x']||keys['X']||mouseHeld) raw.b=true;       // Click = Makey Makey front pad
-  if(keys['Escape']) raw.start=true;
   if(keys['f']||keys['F']) raw.fs=true;
 
   if(gpIndex!==null){
@@ -1025,6 +1065,63 @@ const fsBtnEl = document.getElementById('fsBtn');
 
 const cardEls = Array.from(document.querySelectorAll('.card'));
 const mentionOrder = ['potencias','telecomunicaciones','computadores','control'];
+
+const DIFFICULTY_PROFILES = {
+  low:{label:'BAJO',timeScale:1.24,bias:-1},
+  medium:{label:'MEDIO',timeScale:1.00,bias:0},
+  high:{label:'ALTO',timeScale:0.82,bias:1}
+};
+let difficultyMode='medium';
+try {
+  const savedDiff=localStorage.getItem('arcade_difficulty');
+  if(savedDiff && DIFFICULTY_PROFILES[savedDiff]) difficultyMode=savedDiff;
+} catch(e) {}
+let difficultyPanelOpen=false;
+let difficultyCursor=['low','medium','high'].indexOf(difficultyMode);
+if(difficultyCursor<0) difficultyCursor=1;
+let difficultyDirectHeld={up:false,down:false,left:false,right:false};
+let difficultySuppressAUntilRelease=false;
+const difficultyPanelEl=document.getElementById('difficultyPanel');
+const difficultyOptionEls=Array.from(document.querySelectorAll('.difficulty-option'));
+const difficultyCurrentEl=document.getElementById('difficultyCurrent');
+function persistDifficulty(){ try { localStorage.setItem('arcade_difficulty',difficultyMode); } catch(e) {} }
+function difficultyTime(baseSeconds){ return +(baseSeconds*(DIFFICULTY_PROFILES[difficultyMode]||DIFFICULTY_PROFILES.medium).timeScale).toFixed(2); }
+function difficultyLevel(index){
+  const bias=(DIFFICULTY_PROFILES[difficultyMode]||DIFFICULTY_PROFILES.medium).bias;
+  return Math.max(0,Math.min(9,index+bias));
+}
+function difficultyRound(round){ return difficultyLevel(Math.max(0,round-1))+1; }
+function renderDifficultyPanel(){
+  difficultyOptionEls.forEach((el,i)=>el.classList.toggle('selected',i===difficultyCursor));
+  if(difficultyCurrentEl) difficultyCurrentEl.textContent='DIFICULTAD ACTUAL: '+DIFFICULTY_PROFILES[difficultyMode].label;
+}
+function openDifficultyPanel(){
+  if(currentScreen!=='menu') return;
+  difficultyCursor=['low','medium','high'].indexOf(difficultyMode); if(difficultyCursor<0) difficultyCursor=1;
+  difficultyPanelOpen=true; difficultyPanelEl.classList.add('show'); difficultyPanelEl.setAttribute('aria-hidden','false'); renderDifficultyPanel(); resetInputState();
+}
+function closeDifficultyPanel(){
+  difficultyPanelOpen=false; difficultyPanelEl.classList.remove('show'); difficultyPanelEl.setAttribute('aria-hidden','true'); resetInputState();
+}
+function chooseDifficultyByCursor(){ difficultyMode=['low','medium','high'][difficultyCursor]; persistDifficulty(); renderDifficultyPanel(); }
+function toggleDifficultyPanel(){ if(currentScreen==='menu'){ if(difficultyPanelOpen) closeDifficultyPanel(); else openDifficultyPanel(); } }
+
+const OPERATOR_MANUAL_HTML = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Manual de Operador - Arcade de Menciones USM</title><style>body{font-family:Arial,sans-serif;max-width:900px;margin:40px auto;padding:0 24px;color:#173022;line-height:1.5}h1,h2{color:#175b35}table{border-collapse:collapse;width:100%;margin:12px 0 24px}th,td{border:1px solid #aab8ae;padding:8px;text-align:left}th{background:#eaf3ed}.cmd{font-family:monospace;background:#eef4ef;padding:2px 5px}</style></head><body>
+<h1>MANUAL DE OPERADOR - ARCADE DE MENCIONES</h1><p><b>Ingeniería Civil Electrónica - Universidad Técnica Federico Santa María</b></p>
+<h2>1. Operación rápida</h2><ol><li>Abrir el archivo HTML en un navegador moderno.</li><li>Conectar el Makey Makey y comprobar D-pad + A + B.</li><li>Seleccionar una mención con ◀/▶ y entrar con A.</li><li>Configurar dificultad con <span class="cmd">D</span>: BAJO, MEDIO o ALTO. Seleccionar con flechas y A; B/Esc cierra.</li><li>Mute: botón 🔊/🔇. La preferencia se guarda en el navegador.</li></ol>
+<h2>2. Controles</h2><table><tr><th>Control</th><th>Función</th></tr><tr><td>D-pad</td><td>Movimiento o ajuste según el juego.</td></tr><tr><td>A</td><td>Acción principal.</td></tr><tr><td>B</td><td>Acción secundaria o salida segura.</td></tr><tr><td>Esc</td><td>Salir al menú con teclado.</td></tr><tr><td>Enter</td><td>No tiene función.</td></tr></table>
+<h2>3. Dificultad</h2><table><tr><th>Modo</th><th>Tiempo</th><th>Complejidad</th></tr><tr><td>BAJO</td><td>24% más que MEDIO</td><td>Progresión más suave</td></tr><tr><td>MEDIO</td><td>Base</td><td>Progresión estándar</td></tr><tr><td>ALTO</td><td>18% menos que MEDIO</td><td>Progresión más exigente</td></tr></table><p>Los cuatro juegos conservan 10 niveles y la dificultad crece con el avance.</p>
+<h2>4. Minijuegos</h2><h3>Potencias y Circuitos</h3><p>Conectar ⚡ con 💡 girando y cambiando piezas. Al perder se repite el mismo nivel con una nueva configuración.</p><h3>Telecomunicaciones</h3><p>Hacer coincidir la señal cian con la señal gris ajustando frecuencia y amplitud. Las flechas laterales siguen la orientación configurada en pantalla.</p><h3>Computadores</h3><p>Completar la tabla de verdad con A. La tabla correcta se aprueba automáticamente.</p><h3>Control Automático</h3><p>Llevar Kp, Ki y Kd a las zonas verdes. Los niveles no comienzan completamente estabilizados.</p>
+<h2>5. Regla única de pérdida</h2><p>En los cuatro minijuegos, al agotarse el tiempo se repite el <b>MISMO NIVEL</b> con una nueva configuración.</p>
+<h2>6. Easter eggs</h2><p><span class="cmd">M M M</span> desde el menú abre <b>KONG RUN</b>. <span class="cmd">P P P</span> abre <b>LAB//DARK</b>.</p>
+<h2>7. Atajos de operador</h2><p><span class="cmd">I</span> estadísticas · <span class="cmd">Shift+R</span> reinicia sesión · <span class="cmd">F</span> pantalla completa · <span class="cmd">D</span> dificultad.</p>
+<h2>8. Checklist</h2><ul><li>USB y tierra del Makey Makey comprobados.</li><li>Seis bananas conectadas.</li><li>Audio probado.</li><li>Dificultad elegida.</li><li>Una prueba rápida de las cuatro menciones.</li></ul>
+</body></html>`;
+function downloadOperatorManual(){
+  const blob=new Blob([OPERATOR_MANUAL_HTML],{type:'text/html;charset=utf-8'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='Manual_Operador_Arcade_Menciones_USM.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+const manualBtn=document.getElementById('downloadManualBtn');
+if(manualBtn) manualBtn.addEventListener('click',e=>{ e.preventDefault(); downloadOperatorManual(); });
 let menuSelection = 0; // 0..3 = cards, 4 = fullscreen button
 const MENU_ITEMS = mentionOrder.length + 1;
 let currentScreen = 'menu'; // 'menu' | one of mentionOrder
@@ -1045,6 +1142,7 @@ function resetInputState(){
   Object.keys(prevInput).forEach(k=>{ prevInput[k]=false; rawHistory[k]=false; });
   Object.keys(repeatTimers).forEach(k=>{ repeatTimers[k]=0; repeatWasHeld[k]=false; });
   exitHoldMs = 0; exitReady = false;
+  difficultyDirectHeld={up:false,down:false,left:false,right:false};
 }
 
 function renderMenuSelection(){
@@ -1085,7 +1183,7 @@ const LEARNINGS = {
 const ATTRACT_DEMOS = {
   potencias:{title:'POTENCIAS Y CIRCUITOS', sub:'Conecta energía', steps:[['◀ ▲ ▼ ▶','MOVER'],['A','ROTAR'],['B','CAMBIAR PIEZA']], note:'Objetivo: unir ⚡ con 💡'},
   telecomunicaciones:{title:'TELECOMUNICACIONES', sub:'Sintoniza la señal', steps:[['◀ ▶','FRECUENCIA'],['▲ ▼','AMPLITUD'],['B','NUEVA SEÑAL']], note:'Objetivo: hacer coincidir ambas ondas'},
-  computadores:{title:'COMPUTADORES', sub:'Completa la lógica', steps:[['▲ ▼','ELEGIR FILA'],['A','CAMBIAR 0 / 1'],['B','REVISAR']], note:'Objetivo: completar la tabla de verdad'},
+  computadores:{title:'COMPUTADORES', sub:'Completa la lógica', steps:[['▲ ▼','ELEGIR FILA'],['A','CAMBIAR 0 / 1'],['','SE APRUEBA SOLA']], note:'Objetivo: completar la tabla de verdad'},
   control:{title:'CONTROL AUTOMÁTICO', sub:'Estabiliza el sistema', steps:[['◀ ▶','ELEGIR PERILLA'],['▲ ▼','AJUSTAR'],['','MANTENER HASTA VERDE']], note:'Objetivo: dejar Kp, Ki y Kd dentro de la zona objetivo'}
 };
 
@@ -1205,14 +1303,42 @@ function bumpSecretSequence(key){
     }
   }
 }
+window.addEventListener('keyup', e=>{
+  const k=e.key;
+  if(k==='ArrowUp') difficultyDirectHeld.up=false;
+  if(k==='ArrowDown') difficultyDirectHeld.down=false;
+  if(k==='ArrowLeft') difficultyDirectHeld.left=false;
+  if(k==='ArrowRight') difficultyDirectHeld.right=false;
+  if(k===' ' || k==='Spacebar' || k==='z' || k==='Z') difficultySuppressAUntilRelease=false;
+});
+
 window.addEventListener('keydown', e=>{
-  if(currentScreen==='menu' && !e.repeat){
+  if(difficultyPanelOpen && !e.repeat){
+    if(e.key==='ArrowLeft' || e.key==='ArrowUp'){ e.preventDefault(); difficultyDirectHeld[e.key==='ArrowLeft'?'left':'up']=true; difficultyCursor=(difficultyCursor+2)%3; renderDifficultyPanel(); return; }
+    if(e.key==='ArrowRight' || e.key==='ArrowDown'){ e.preventDefault(); difficultyDirectHeld[e.key==='ArrowRight'?'right':'down']=true; difficultyCursor=(difficultyCursor+1)%3; renderDifficultyPanel(); return; }
+    if(e.key==='1' || e.key==='2' || e.key==='3'){ e.preventDefault(); difficultyCursor=parseInt(e.key,10)-1; chooseDifficultyByCursor(); closeDifficultyPanel(); return; }
+    if(e.key===' ' || e.key==='Spacebar' || e.key==='z' || e.key==='Z'){ e.preventDefault(); difficultySuppressAUntilRelease=true; chooseDifficultyByCursor(); closeDifficultyPanel(); return; }
+    if(e.key==='Escape'){ e.preventDefault(); closeDifficultyPanel(); return; }
+    if(e.key==='x' || e.key==='X'){ e.preventDefault(); closeDifficultyPanel(); return; }
+    if(e.key==='d' || e.key==='D'){ e.preventDefault(); closeDifficultyPanel(); return; }
+  }
+
+  if((e.key==='d' || e.key==='D') && !e.repeat){
+    if(currentScreen==='menu'){ e.preventDefault(); toggleDifficultyPanel(); }
+    return;
+  }
+  if((e.key==='Escape') && !e.repeat){
+    e.preventDefault();
+    if(difficultyPanelOpen){ closeDifficultyPanel(); return; }
+    if(currentScreen!=='menu' && !screenTransitioning){ backToMenu(); return; }
+  }
+  if(currentScreen==='menu' && !difficultyPanelOpen && !e.repeat){
     if(e.key==='m' || e.key==='M'){ e.preventDefault(); bumpSecretSequence('m'); return; }
     if(e.key==='p' || e.key==='P'){ e.preventDefault(); bumpSecretSequence('p'); return; }
     resetSecretSequence();
   }
   if(e.key==='i' || e.key==='I') toggleStats();
-  if((e.key==='R') && e.shiftKey) resetSession();
+  if((e.key==='R' || e.key==='r') && e.shiftKey) resetSession();
 });
 
 /* ---------- reinicio rápido de sesión para el/la operador(a) (Shift+R) ---------- */
@@ -1289,9 +1415,17 @@ function backToMenu(){
   });
 }
 function updateMenu(input){
+  if(difficultyPanelOpen){
+    if((input.rep.left || input.rep.up) && !difficultyDirectHeld.left && !difficultyDirectHeld.up) difficultyCursor=(difficultyCursor+2)%3;
+    if((input.rep.right || input.rep.down) && !difficultyDirectHeld.right && !difficultyDirectHeld.down) difficultyCursor=(difficultyCursor+1)%3;
+    if(input.pressed.a && !difficultySuppressAUntilRelease){ chooseDifficultyByCursor(); closeDifficultyPanel(); }
+    if(input.pressed.b || input.pressed.start){ closeDifficultyPanel(); }
+    renderDifficultyPanel();
+    return;
+  }
   if(input.rep.left)  menuSelection = (menuSelection + MENU_ITEMS - 1) % MENU_ITEMS;
   if(input.rep.right) menuSelection = (menuSelection + 1) % MENU_ITEMS;
-  if(input.pressed.a || input.pressed.fs){
+  if((input.pressed.a && !difficultySuppressAUntilRelease) || input.pressed.fs){
     if(menuSelection < mentionOrder.length) enterGame(mentionOrder[menuSelection]);
     else toggleFullscreen();
   }
@@ -1740,7 +1874,7 @@ const potencias = {
     const path = buildPath();
     const pathSet = new Set(path.map(([c,r])=>c+','+r));
     const g=[];
-    const difficulty = Math.min(1, this.level/9);
+    const difficulty = difficultyLevel(this.level)/9;
     for(let r=0;r<def.rows;r++){
       const row=[];
       for(let c=0;c<def.cols;c++){
@@ -1778,7 +1912,7 @@ const potencias = {
     this.successTime = 0;
     this.timeoutTime = 0;
     this.pulseT = 0;
-    this.timeMax = this.timeForLevel(this.level);
+    this.timeMax = difficultyTime(this.timeForLevel(this.level));
     this.timeLeft = this.timeMax;
   },
   isFixed(c,r){
@@ -1995,8 +2129,8 @@ const telecomunicaciones = {
     this.newTarget();
   },
   newTarget(){
-    const freqTol = this.level < 4 ? 0.26 : (this.level < 7 ? 0.22 : 0.18);
-    const ampTol  = this.level < 4 ? 0.07 : (this.level < 7 ? 0.06 : 0.05);
+    const freqTol = difficultyLevel(this.level) < 4 ? 0.26 : (difficultyLevel(this.level) < 7 ? 0.22 : 0.18);
+    const ampTol  = difficultyLevel(this.level) < 4 ? 0.07 : (difficultyLevel(this.level) < 7 ? 0.06 : 0.05);
     let tries = 0;
     do {
       this.targetFreq = 1 + Math.floor(Math.random()*6)*0.5;
@@ -2006,7 +2140,7 @@ const telecomunicaciones = {
       Math.abs(this.freq-this.targetFreq) < freqTol &&
       Math.abs(this.amp-this.targetAmp) < ampTol);
     this.matched = false; this.successTime = 0; this.timeoutTime = 0;
-    this.timeMax = this.timeForLevel(this.level);
+    this.timeMax = difficultyTime(this.timeForLevel(this.level));
     this.timeLeft = this.timeMax;
   },
   update(input){
@@ -2023,18 +2157,16 @@ const telecomunicaciones = {
       if(this.timeoutTime<=0) this.newTarget();
       return;
     }
-    // Orientación física del control: izquierda aumenta la frecuencia
-    // hacia el lado que el jugador percibe como izquierdo y derecha la reduce.
-    // Se invierte respecto de la convención numérica para que las flechas
-    // coincidan con el sentido visual del juego.
-    if(input.rep.left)  this.freq = Math.min(6, +(this.freq+0.5).toFixed(2));
-    if(input.rep.right) this.freq = Math.max(0.5, +(this.freq-0.5).toFixed(2));
+    // Orientación intuitiva: izquierda disminuye la frecuencia y derecha la aumenta.
+    // Así el control coincide con el sentido espacial que ve el jugador.
+    if(input.rep.left)  this.freq = Math.max(0.5, +(this.freq-0.5).toFixed(2));
+    if(input.rep.right) this.freq = Math.min(6, +(this.freq+0.5).toFixed(2));
     if(input.rep.up)    this.amp = Math.min(1, +(this.amp+0.09).toFixed(2));
     if(input.rep.down)  this.amp = Math.max(0.1, +(this.amp-0.09).toFixed(2));
     if(input.pressed.b) this.newTarget();
 
-    const freqTol = this.level < 4 ? 0.26 : (this.level < 7 ? 0.22 : 0.18);
-    const ampTol  = this.level < 4 ? 0.07 : (this.level < 7 ? 0.06 : 0.05);
+    const freqTol = difficultyLevel(this.level) < 4 ? 0.26 : (difficultyLevel(this.level) < 7 ? 0.22 : 0.18);
+    const ampTol  = difficultyLevel(this.level) < 4 ? 0.07 : (difficultyLevel(this.level) < 7 ? 0.06 : 0.05);
     const closeFreq = Math.abs(this.freq-this.targetFreq) < freqTol;
     const closeAmp  = Math.abs(this.amp-this.targetAmp) < ampTol;
     if(closeFreq && closeAmp){
@@ -2119,9 +2251,9 @@ const computadores = {
   reset(){ this.level = 0; this.gateHistory=[]; this.gateBag=[]; this.gatePoolSignature=''; randomFactCache.computadores = randomFact('computadores'); this.newGate(); },
   newGate(){
     let pool;
-    if(this.level < 2) pool = ['AND','OR'];
-    else if(this.level < 4) pool = ['AND','OR','XOR'];
-    else if(this.level < 7) pool = ['AND','OR','XOR','NAND','NOR'];
+    if(difficultyLevel(this.level) < 2) pool = ['AND','OR'];
+    else if(difficultyLevel(this.level) < 4) pool = ['AND','OR','XOR'];
+    else if(difficultyLevel(this.level) < 7) pool = ['AND','OR','XOR','NAND','NOR'];
     else pool = ['AND','OR','XOR','NAND','NOR','XNOR'];
 
     // Bolsa barajada + memoria de las últimas compuertas.
@@ -2145,7 +2277,7 @@ const computadores = {
 
     // XNOR queda restringida a niveles altos y no puede saltar dos veces
     // dentro de una ventana corta salvo que sea la única candidata.
-    if(this.level >= 7 && this.gateBag.length>1 && this.gateBag[pickIndex]==='XNOR' && Math.random()>0.08){
+    if(difficultyLevel(this.level) >= 7 && this.gateBag.length>1 && this.gateBag[pickIndex]==='XNOR' && Math.random()>0.08){
       const alt = this.gateBag.findIndex((g,i)=>i!==pickIndex && !this.gateHistory.slice(-recentCount).includes(g));
       if(alt>=0) pickIndex = alt;
     }
@@ -2165,7 +2297,7 @@ const computadores = {
     this.cursor = 0; this.checked=false; this.ok=false; this.hasEdited=false;
     this.successTime=0; this.timeoutTime=0; this.demoIdx=0;
     this.feedback = 'COMPLETA LA TABLA · SE APRUEBA SOLA';
-    this.timeMax = this.timeForLevel(this.level);
+    this.timeMax = difficultyTime(this.timeForLevel(this.level));
     this.timeLeft = this.timeMax;
   },
   update(input){
@@ -2338,12 +2470,12 @@ const control = {
     Kd:'Anticipa hacia dónde va el error y frena antes de pasarse.'
   },
   reset(){
-    this.round = 1; this.tol = this.tolForRound(this.round);
+    this.round = 1; this.tol = this.tolForRound(difficultyRound(this.round));
     randomFactCache.control = randomFact('control');
     this.newRound();
   },
   newRound(){
-    this.tol = this.tolForRound(this.round);
+    this.tol = this.tolForRound(difficultyRound(this.round));
     const forceOutside = this.round >= 3 ? [0,1,2] : [Math.floor(Math.random()*3)];
     const makeDial = (name, mustBeOutside) => {
       const target = 30 + Math.random()*40;
@@ -2370,7 +2502,7 @@ const control = {
       makeDial('Kd', forceOutside.includes(2)),
     ];
     this.sel = 0; this.inZoneTime = 0;
-    this.timeMax = this.timeForRound(this.round);
+    this.timeMax = difficultyTime(this.timeForRound(this.round));
     this.timeLeft = this.timeMax;
     this.state='play'; this.stateTime=0;
   },
@@ -2382,10 +2514,10 @@ const control = {
           if(this.round>=10){ showGameFinished('control'); return; }
           const fromLevel=this.round;
           this.round++;
-          this.tol = this.tolForRound(this.round);
+          this.tol = this.tolForRound(difficultyRound(this.round));
           showLevelTransition(fromLevel,this.round);
         }
-        else { this.round=1; this.tol=this.tolForRound(this.round); }
+        else { this.tol=this.tolForRound(difficultyRound(this.round)); }
         this.newRound();
       }
       return;
