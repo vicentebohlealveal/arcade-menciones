@@ -34,6 +34,10 @@ El manual del operador fue desarrollado por Vicente Bohle Alveal y vendido a la 
 
 El juego fue preparado para demostraciones educativas. Mantener los créditos ya presentes en el código, incluida la atribución `VBA`.
 
+## Historial de versiones
+
+La rama [`historial`](https://github.com/vicentebohlealveal/arcade-menciones/tree/historial) reconstruye, commit por commit, cómo evolucionó el programa a partir de las versiones que quedaron guardadas. El resumen está en [`VERSIONES.md`](https://github.com/vicentebohlealveal/arcade-menciones/blob/historial/VERSIONES.md).
+
 ## Licencia / License
 
 © 2026 Vicente Bohle Alveal. Todos los derechos reservados / All rights reserved. Público solo para revisión como portafolio; ver [LICENSE](LICENSE).
